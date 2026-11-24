@@ -196,6 +196,7 @@ body.lp-body{background:#fff}
 .lp-nav.on{background:rgba(6,36,48,.85);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 8px 30px rgba(0,0,0,.18);padding:8px 0}
 .lp-nav-in{display:flex;align-items:center;gap:18px}
 .lp-brand{display:flex;align-items:center;gap:10px;color:#fff;text-decoration:none;font-weight:700;font-size:17px;line-height:1.15}
+.lp-pill{background:#fff;border-radius:14px;padding:6px 12px;box-shadow:0 6px 18px rgba(0,0,0,.18);display:inline-flex}
 .lp-brand small{display:block;font-size:11px;font-weight:500;opacity:.75}
 .lp-logo{width:44px;height:44px;border-radius:13px;background:linear-gradient(135deg,var(--t1),var(--n3));display:grid;place-items:center;box-shadow:0 6px 18px rgba(15,143,156,.4)}
 .lp-links{display:flex;gap:4px;margin-inline-start:auto}
@@ -510,7 +511,7 @@ async function renderLanding(){
   const homeBtn=OF.session?'<a class="lp-btn lp-btn-glass" href="#'+(isOwner||isPanelUser()?'admin':(staffMe?'staff':'account'))+'">'+(isOwner||staffMe?'لوحة التحكم':'حسابي')+'</a>':'<a class="lp-btn lp-btn-glass" href="#login">تسجيل الدخول</a>';
   const stats=[[br.length,'فروع في أبها'],[st.orgs,'جهة شريكة'],[st.customers,'مستفيد من عروض الجهات'],[st.delivered,'هدية مسلّمة']].filter(x=>+x[0]>0);
   $('#app').innerHTML='<div class="lp">'+
-  '<header class="lp-nav" id="lpNav"><div class="lp-wrap lp-nav-in"><a href="#" class="lp-brand" aria-label="بصمة الاهتمام للاتصالات">'+LOGOF(46)+'</a>'+
+  '<header class="lp-nav" id="lpNav"><div class="lp-wrap lp-nav-in"><a href="#" class="lp-brand lp-pill" aria-label="بصمة الاهتمام للاتصالات">'+LOGOF(44,true)+'</a>'+
   '<nav class="lp-links"><a href="#" data-to="about">من نحن</a><a href="#" data-to="services">خدماتنا</a><a href="#" data-to="ach">إنجازاتنا</a><a href="#" data-to="orgs">الجهات</a><a href="#" data-to="branches">فروعنا</a></nav>'+
   '<div class="lp-nav-cta"><a class="lp-btn lp-btn-ghost" target="_blank" rel="noopener" href="'+esc(store)+'">المتجر</a>'+homeBtn+'</div></div></header>'+
   // HERO
@@ -538,7 +539,7 @@ async function renderLanding(){
   '<section class="lp-sec" id="branches"><div class="lp-wrap"><div class="lp-head rv"><span class="lp-kicker">فروعنا</span><h2>زورنا في أبها</h2></div><div class="lp-br">'+br.map((b,i)=>'<div class="lp-br-c rv" style="--d:'+(i*80)+'ms"><div class="lp-br-top">'+lpI('phone','sm')+'<h3>'+esc(b.name)+'</h3></div>'+(b.address?'<p>'+esc(b.address)+'</p>':'')+'<div class="lp-br-act">'+(b.map?'<a class="lp-btn lp-btn-main sm" target="_blank" rel="noopener" href="'+esc(b.map)+'">الموقع على الخريطة</a>':'')+(b.phone?'<a class="lp-btn lp-btn-ghost sm" href="tel:'+esc(b.phone)+'">اتصال '+esc(b.phone)+'</a>':'')+'</div></div>').join('')+'</div></div></section>'+
   // CTA
   '<section class="lp-cta"><div class="lp-wrap lp-cta-in rv"><div><h2>جاهز نخدمك؟</h2><p>سجّل دخولك واطلب خدمتك، ويتواصل معك فريقنا بأسرع وقت.</p></div><div class="lp-hero-cta"><button class="lp-btn lp-btn-white" onclick="lpGo()">اطلب خدمتك</button><a class="lp-btn lp-btn-glass" target="_blank" rel="noopener" href="'+esc(store)+'">تسوّق من المتجر</a></div></div></section>'+
-  '<footer class="lp-foot"><div class="lp-wrap lp-foot-in"><div class="lp-brand">'+LOGOF(44)+'<span style="font-size:13px;opacity:.7;font-weight:500">أبها – المملكة العربية السعودية</span></div><div class="lp-foot-l"><a target="_blank" rel="noopener" href="'+esc(store)+'">المتجر الإلكتروني</a><a href="tel:0577894369">0577894369</a><a href="#login">دخول الموظفين</a></div><small>© '+new Date().getFullYear()+' بصمة الاهتمام للاتصالات</small></div></footer>'+
+  '<footer class="lp-foot"><div class="lp-wrap lp-foot-in"><div class="lp-brand"><span class="lp-pill">'+LOGOF(40,true)+'</span><span style="font-size:13px;opacity:.7;font-weight:500">أبها – المملكة العربية السعودية</span></div><div class="lp-foot-l"><a target="_blank" rel="noopener" href="'+esc(store)+'">المتجر الإلكتروني</a><a href="tel:0577894369">0577894369</a><a href="#login">دخول الموظفين</a></div><small>© '+new Date().getFullYear()+' بصمة الاهتمام للاتصالات</small></div></footer>'+
   '<a class="lp-wa" target="_blank" rel="noopener" aria-label="واتساب" href="https://wa.me/'+STORE_WA+'">'+ic('whatsapp')+'</a></div>';
   $$('[data-to]').forEach(a=>a.onclick=e=>{e.preventDefault();const t=document.getElementById(a.dataset.to);if(t)window.scrollTo({top:t.getBoundingClientRect().top+scrollY-70,behavior:'smooth'})});
   const nav=$('#lpNav');const onS=()=>{if(nav)nav.classList.toggle('on',scrollY>30)};window.addEventListener('scroll',onS,{passive:true});onS();
