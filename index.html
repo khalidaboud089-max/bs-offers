@@ -267,6 +267,18 @@ body.lp-body{background:#fff}
 .lp-scale i{flex:1;height:3px;border-radius:3px;background:linear-gradient(90deg,var(--t2),var(--n3))}
 .lp-svc{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
 .lp-svc-card{position:relative;background:#fff;border-radius:24px;padding:22px;border:1px solid #e3e9f5;box-shadow:0 6px 20px rgba(12,45,107,.05);transition:transform .3s,box-shadow .3s;display:flex;flex-direction:column}
+.lp-svc-card{color:inherit;text-decoration:none}
+.lp-hot{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.lp-hot-c{position:relative;display:flex;flex-direction:column;background:#fff;border-radius:22px;overflow:hidden;border:1px solid #e3e9f5;color:inherit;text-decoration:none;transition:transform .3s,box-shadow .3s}
+.lp-hot-c:hover{transform:translateY(-6px);box-shadow:0 22px 46px rgba(10,60,79,.16)}
+.lp-hot-img{height:170px;background:radial-gradient(circle,#f5f8fb,#e9eff4);display:flex;align-items:center;justify-content:center}
+.lp-hot-img img{max-height:150px;max-width:88%;mix-blend-mode:multiply;transition:transform .4s}
+.lp-hot-c:hover .lp-hot-img img{transform:scale(1.07)}
+.lp-hot-img.ic{background:linear-gradient(135deg,var(--n2),var(--t1));color:#fff}.lp-hot-img.ic svg{width:70px;height:70px}
+.lp-hot-b{padding:14px 16px 18px}.lp-hot-b h3{margin:0 0 4px;font-size:16px}.lp-hot-b p{margin:0;color:var(--mut);font-size:13px}
+.lp-hot-tag{position:absolute;top:12px;right:12px;z-index:1;font-size:11px;font-weight:700;color:#fff;background:linear-gradient(135deg,var(--t2),var(--t1));padding:4px 10px;border-radius:999px}
+a.lp-float{text-decoration:none;z-index:3;cursor:pointer}
+@media (max-width:980px){.lp-hot{grid-template-columns:repeat(2,1fr)}}
 .lp-svc-card:hover{transform:translateY(-6px);box-shadow:0 24px 50px rgba(12,45,107,.14)}
 .lp-svc-img{height:150px;border-radius:18px;background:radial-gradient(circle,#f3f7fd,#e8eef9);display:flex;align-items:center;justify-content:center;margin-bottom:16px;overflow:hidden}
 .lp-svc-img img{max-height:130px;max-width:90%;mix-blend-mode:multiply;transition:transform .4s}
@@ -483,15 +495,28 @@ const LP_SVG={
   school:'<path d="M4 24 32 10l28 14-28 14z"/><path d="M14 30v14c10 8 26 8 36 0V30"/>'
 };
 const lpI=(k,c)=>'<svg viewBox="0 0 64 64" class="'+(c||'')+'" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">'+(LP_SVG[k]||'')+'</svg>';
+const SALLA='https://blhtm.com';
+const SP=id=>SALLA+'/?product_id='+id;
+const WA_MSG=t=>'https://wa.me/'+STORE_WA+'?text='+encodeURIComponent(t);
 const LP_SERVICES=[
- {k:'acc',t:'إكسسوارات وجرابات',d:'جرابات وحمايات شاشة ومسكات وستاندات سيارة بتصاميم عصرية.',i:'case',img:IMG.cs,size:'صغير'},
- {k:'charge',t:'شواحن وسماعات',d:'شواحن سريعة وكيابل وسماعات أصلية لكل الأجهزة.',i:'charge',size:'صغير'},
- {k:'watch',t:'ساعات ذكية',d:'ساعات ذكية من أشهر الماركات مع الإكسسوارات.',i:'watch',size:'متوسط'},
- {k:'phones',t:'جوالات',d:'آيفون وسامسونج وهونر وشاومي وأوبو وتكنو – أصلية وبالتقسيط.',i:'phone',img:IMG.ip17pro,size:'كبير'},
- {k:'tablets',t:'أجهزة لوحية',d:'آيباد وتابلتات للدراسة والعمل والترفيه.',i:'tablet',size:'كبير'},
- {k:'ps',t:'بلايستيشن وألعاب',d:'أجهزة بلايستيشن 5 وأيادي تحكم وأشرطة ألعاب أصلية.',i:'game',img:IMG.ps5,size:'كبير'},
- {k:'pc',t:'تجميعات بي سي',d:'تجميعات قيمنق ومكتبية حسب ميزانيتك واحتياجك.',i:'pc',size:'كبير'},
- {k:'repair',t:'صيانة جميع الأجهزة',d:'صيانة احترافية في الفرع للجوالات والأجهزة اللوحية والبلايستيشن والكمبيوتر.',i:'tools',size:'خدمة'}
+ {k:'acc',t:'إكسسوارات وجرابات',d:'جرابات وحمايات شاشة ومسكات وستاندات سيارة بتصاميم عصرية.',i:'case',img:IMG.cs,size:'صغير',url:SALLA+'/اكسسوارات/c474342180'},
+ {k:'charge',t:'شواحن وكيابل',d:'شواحن سريعة وكيابل وباور بانك من ماركات موثوقة.',i:'charge',img:'https://cdn.salla.sa/QAapr/8237febb-efad-4906-ab71-ab485d1a6bc7-500x500-wQm3VnNcoXKUFD9JHnFeWtyqI6O2Eprk757rDImh.jpg',size:'صغير',url:SALLA+'/شواحن-وكيابل/c940515622'},
+ {k:'audio',t:'سماعات وسبيكرات',d:'سماعات بلوتوث وإيربودز وسبيكرات بصوت نقي.',i:'charge',img:'https://cdn.salla.sa/QAapr/324297c6-88c9-4b0f-a417-d84b232413fd-500x500-EHjZXaNqpwLNggpq29p2bWvOrSri9qR2xeiVozgj.jpg',size:'متوسط',url:SALLA+'/سماعات/c1063985797'},
+ {k:'watch',t:'ساعات ذكية',d:'ساعات ذكية وأساور من أشهر الماركات.',i:'watch',img:'https://cdn.salla.sa/QAapr/86cb3306-ea44-4585-96f5-93c9df094dc1-500x500-SvBP6K3uxUf0vQRvPzLLzrdOmUrXmF2Guhtsdag0.jpg',size:'متوسط',url:SALLA+'/ساعات/c329376955'},
+ {k:'phones',t:'جوالات وأجهزة لوحية',d:'آيفون وسامسونج وهونر وشاومي وأوبو – أصلية وبالتقسيط.',i:'phone',img:IMG.ip17pro,size:'كبير',url:SALLA+'/جوالات/c1255156014'},
+ {k:'ps',t:'بلايستيشن وألعاب',d:'أجهزة بلايستيشن 5 وأيادي تحكم وأشرطة ألعاب أصلية.',i:'game',img:IMG.ps5,size:'كبير',url:SALLA+'/بلايستيشن/c1719480081'},
+ {k:'pc',t:'تجميعات بي سي',d:'تجميعات جيمنج جاهزة بالتقسيط وضمان سنتين.',i:'pc',img:'https://cdn.salla.sa/QAapr/24b160f1-7e95-4620-8072-5e9cd39a922f-500x500-nOD86vS0xFoXuuHb29t7kIpsiWP68h2i0oefAM6z.jpg',size:'كبير',url:SALLA+'/البيسيات/c1153178876'},
+ {k:'repair',t:'صيانة جميع الأجهزة',d:'صيانة احترافية للجوالات والأجهزة اللوحية والبلايستيشن والكمبيوتر.',i:'tools',size:'خدمة',url:WA_MSG('السلام عليكم، أبغى أستفسر عن صيانة جهاز')}
+];
+const LP_HOT=[
+ {t:'صيانة الجوالات المتنقلة',d:'فني يجيك لباب بيتك داخل أبها',tag:'نجيك لبابك',img:'https://cdn.salla.sa/QAapr/c241afe8-8498-4a36-be32-f3d926e0c519-500x500-8uUe5WAy2AWDO9WDpPgGGIn3m0cBoYZYtpBcrB1X.png',url:SP(1291424989)},
+ {t:'آيفون 18 برو ماكس',d:'الجديد وصل – خليجي معتمد',tag:'جديد',img:'https://cdn.salla.sa/QAapr/f2a04729-b15c-445b-bfb3-48e48bc302b9-500x500-JK9JwBVqyclnW45HXzysIChAgAxq1j8lSJ82f44r.jpg',url:SP(1531061066)},
+ {t:'آيفون 18 برو',d:'A20 Pro وثلاث كاميرات 48 ميجا',tag:'جديد',img:'https://cdn.salla.sa/QAapr/75c91fe6-684a-43cf-b83a-298c31e2df34-500x500-9DhCAlShWOpFypYa04bK3BbyADHlEeENv98SMhkl.jpg',url:SP(727243599)},
+ {t:'بلايستيشن 5 سليم',d:'قارئ أقراص 1 تيرا مع يد تحكم',tag:'الأكثر طلباً',img:IMG.ps5,url:SP(112203385)},
+ {t:'تجميعات بي سي بالتقسيط',d:'حتى 12 دفعة بدون فوائد',tag:'تقسيط',img:'https://cdn.salla.sa/QAapr/24b160f1-7e95-4620-8072-5e9cd39a922f-500x500-nOD86vS0xFoXuuHb29t7kIpsiWP68h2i0oefAM6z.jpg',url:SALLA+'/البيسيات/c1153178876'},
+ {t:'صيانة البلايستيشن',d:'تنظيف، تبريد، منافذ HDMI وأعطال التشغيل',tag:'صيانة',ic:'game',url:WA_MSG('السلام عليكم، أبغى صيانة بلايستيشن')},
+ {t:'صيانة البي سي واللابتوب',d:'فحص وترقية وتنظيف وحل الأعطال',tag:'صيانة',ic:'pc',url:WA_MSG('السلام عليكم، أبغى صيانة بي سي / لابتوب')},
+ {t:'صيانة الجوالات في الفرع',d:'شاشات، بطاريات، منافذ شحن',tag:'صيانة',ic:'tools',url:WA_MSG('السلام عليكم، أبغى صيانة جوال')}
 ];
 const LP_DEFAULT={
   heroTitle:'كل اللي يحتاجه جهازك… في مكان واحد',
@@ -508,7 +533,7 @@ async function renderLanding(){
   const P=await loadPub();const L={...LP_DEFAULT,...(P.landing||{})};const ach=(L.achievements&&L.achievements.length?L.achievements:LP_DEFAULT.achievements);
   const br=(P.branches&&P.branches.length?P.branches:[{name:'فرع وسط البلد'},{name:'فرع الحزام الدائري'}]);
   const st=P.stats||{};const store=P.servicesUrl||'https://blhtm.com';
-  const homeBtn=OF.session?'<a class="lp-btn lp-btn-glass" href="#'+(isOwner||isPanelUser()?'admin':(staffMe?'staff':'account'))+'">'+(isOwner||staffMe?'لوحة التحكم':'حسابي')+'</a>':'<a class="lp-btn lp-btn-glass" href="#login">تسجيل الدخول</a>';
+  const homeBtn=OF.session?'<a class="lp-btn lp-btn-glass" href="#'+(isOwner||isPanelUser()?'admin':(staffMe?'staff':'account'))+'">'+(isOwner||staffMe?'لوحة التحكم':'حسابي')+'</a>':'<a class="lp-btn lp-btn-glass" href="#login">دخول منسوبي الشركة</a>';
   const stats=[[br.length,'فروع في أبها'],[st.orgs,'جهة شريكة'],[st.customers,'مستفيد من عروض الجهات'],[st.delivered,'هدية مسلّمة']].filter(x=>+x[0]>0);
   $('#app').innerHTML='<div class="lp">'+
   '<header class="lp-nav" id="lpNav"><div class="lp-wrap lp-nav-in"><a href="#" class="lp-brand lp-pill" aria-label="بصمة الاهتمام للاتصالات">'+LOGOF(44,true)+'</a>'+
@@ -519,7 +544,7 @@ async function renderLanding(){
    '<div class="lp-hero-txt rv"><span class="lp-chip"><i></i>وكلاء وموزعون معتمدون · أبها</span><h1>'+esc(L.heroTitle)+'</h1><p>'+esc(L.heroSub)+'</p>'+
    '<div class="lp-hero-cta"><button class="lp-btn lp-btn-main" onclick="lpGo()">اطلب خدمتك الآن</button><a class="lp-btn lp-btn-glass" href="#" data-to="services">تعرّف على خدماتنا</a></div>'+
    '<div class="lp-badges"><span>'+lpI('card')+'تقسيط تابي وتمارا</span><span>'+lpI('truck')+'توصيل داخل أبها</span><span>'+lpI('shield')+'منتجات أصلية بالضمان</span></div></div>'+
-   '<div class="lp-hero-art rv"><div class="lp-orbit"></div><div class="lp-card-img c1"><img src="'+IMG.ip17max+'" alt="ايفون 17 برو ماكس"></div><div class="lp-card-img c2"><img src="'+IMG.ip17pro+'" alt="ايفون 17 برو"></div><div class="lp-card-img c3"><img src="'+IMG.ps5b+'" alt="بلايستيشن 5"></div><div class="lp-float f1">'+lpI('tools')+'<b>صيانة</b><small>في الفرع</small></div><div class="lp-float f2">'+lpI('tag')+'<b>أفضل سعر</b><small>بجودة أصلية</small></div></div>'+
+   '<div class="lp-hero-art rv"><div class="lp-orbit"></div><div class="lp-card-img c1"><img src="'+IMG.ip17max+'" alt="ايفون 17 برو ماكس"></div><div class="lp-card-img c2"><img src="'+IMG.ip17pro+'" alt="ايفون 17 برو"></div><div class="lp-card-img c3"><img src="'+IMG.ps5b+'" alt="بلايستيشن 5"></div><a class="lp-float f1" target="_blank" rel="noopener" href="'+WA_MSG('السلام عليكم، أبغى أستفسر عن صيانة جهاز')+'">'+lpI('tools')+'<b>صيانة</b><small>تواصل واتساب</small></a><div class="lp-float f2">'+lpI('tag')+'<b>أفضل سعر</b><small>بجودة أصلية</small></div></div>'+
   '</div><div class="lp-brands"><div class="lp-marq"><span>Apple</span><span>Samsung</span><span>Honor</span><span>Xiaomi</span><span>OPPO</span><span>TECNO</span><span>Sony PlayStation</span><span>MASS</span><span>Apple</span><span>Samsung</span><span>Honor</span><span>Xiaomi</span><span>OPPO</span><span>TECNO</span><span>Sony PlayStation</span><span>MASS</span></div></div></section>'+
   // ABOUT
   '<section class="lp-sec" id="about"><div class="lp-wrap lp-about"><div class="rv"><span class="lp-kicker">من نحن</span><h2>بصمة الاهتمام للاتصالات</h2><p class="lp-lead">'+esc(L.about)+'</p><div class="lp-about-pts"><div>'+lpI('medal')+'<b>خبرة ومعرفة</b><span>فريق متخصص يختار لك الأنسب لاحتياجك.</span></div><div>'+lpI('shield')+'<b>أصلي ومضمون</b><span>منتجات أصلية من وكلاء معتمدين.</span></div></div></div>'+
@@ -527,7 +552,7 @@ async function renderLanding(){
   // SERVICES
   '<section class="lp-sec lp-alt" id="services"><div class="lp-wrap"><div class="lp-head rv"><span class="lp-kicker">من الصغير إلى الكبير</span><h2>كل ما نوفّره لك</h2><p>من إكسسوار بسيط لجوالك، إلى جهاز ألعاب أو تجميعة بي سي كاملة، وكل شي بعدها نصونه لك.</p></div>'+
    '<div class="lp-scale rv"><span>صغير</span><i></i><span>متوسط</span><i></i><span>كبير</span><i></i><span>خدمة</span></div>'+
-   '<div class="lp-svc">'+LP_SERVICES.map((s,i)=>'<article class="lp-svc-card rv" style="--d:'+(i*60)+'ms">'+(s.img?'<div class="lp-svc-img"><img loading="lazy" src="'+s.img+'" alt="'+esc(s.t)+'"></div>':'<div class="lp-svc-ic">'+lpI(s.i)+'</div>')+'<span class="lp-size">'+s.size+'</span><h3>'+esc(s.t)+'</h3><p>'+esc(s.d)+'</p><button class="lp-link" onclick="lpGo(\''+s.k+'\')">اطلب الخدمة ←</button></article>').join('')+'</div></div></section>'+
+   '<div class="lp-svc">'+LP_SERVICES.map((s,i)=>'<a class="lp-svc-card rv" target="_blank" rel="noopener" href="'+esc(s.url)+'" style="--d:'+(i*60)+'ms">'+(s.img?'<div class="lp-svc-img"><img loading="lazy" src="'+s.img+'" alt="'+esc(s.t)+'"></div>':'<div class="lp-svc-ic">'+lpI(s.i)+'</div>')+'<span class="lp-size">'+s.size+'</span><h3>'+esc(s.t)+'</h3><p>'+esc(s.d)+'</p><span class="lp-link">'+(s.k==='repair'?'تواصل واتساب ←':'تسوّق الآن ←')+'</span></a>').join('')+'</div>'+'<div class="lp-head rv" style="margin-top:70px"><span class="lp-kicker">الأبرز الآن</span><h2>أبرز خدماتنا ومنتجاتنا</h2></div><div class="lp-hot">'+LP_HOT.map((h,i)=>'<a class="lp-hot-c rv" target="_blank" rel="noopener" href="'+esc(h.url)+'" style="--d:'+(i*50)+'ms"><span class="lp-hot-tag">'+esc(h.tag)+'</span>'+(h.img?'<div class="lp-hot-img"><img loading="lazy" src="'+h.img+'" alt="'+esc(h.t)+'"></div>':'<div class="lp-hot-img ic">'+lpI(h.ic)+'</div>')+'<div class="lp-hot-b"><h3>'+esc(h.t)+'</h3><p>'+esc(h.d)+'</p></div></a>').join('')+'</div></div></section>'+
   // ACHIEVEMENTS
   '<section class="lp-sec lp-dark" id="ach"><div class="lp-glow g3"></div><div class="lp-wrap"><div class="lp-head rv"><span class="lp-kicker light">إنجازاتنا</span><h2>أرقام وخطوات نفتخر فيها</h2></div><div class="lp-ach">'+ach.map((a,i)=>'<div class="lp-ach-item rv" style="--d:'+(i*70)+'ms"><span class="lp-num">'+String(i+1).padStart(2,'0')+'</span><p>'+esc(a)+'</p></div>').join('')+'</div></div></section>'+
   // WHY
@@ -539,7 +564,7 @@ async function renderLanding(){
   '<section class="lp-sec" id="branches"><div class="lp-wrap"><div class="lp-head rv"><span class="lp-kicker">فروعنا</span><h2>زورنا في أبها</h2></div><div class="lp-br">'+br.map((b,i)=>'<div class="lp-br-c rv" style="--d:'+(i*80)+'ms"><div class="lp-br-top">'+lpI('phone','sm')+'<h3>'+esc(b.name)+'</h3></div>'+(b.address?'<p>'+esc(b.address)+'</p>':'')+'<div class="lp-br-act">'+(b.map?'<a class="lp-btn lp-btn-main sm" target="_blank" rel="noopener" href="'+esc(b.map)+'">الموقع على الخريطة</a>':'')+(b.phone?'<a class="lp-btn lp-btn-ghost sm" href="tel:'+esc(b.phone)+'">اتصال '+esc(b.phone)+'</a>':'')+'</div></div>').join('')+'</div></div></section>'+
   // CTA
   '<section class="lp-cta"><div class="lp-wrap lp-cta-in rv"><div><h2>جاهز نخدمك؟</h2><p>سجّل دخولك واطلب خدمتك، ويتواصل معك فريقنا بأسرع وقت.</p></div><div class="lp-hero-cta"><button class="lp-btn lp-btn-white" onclick="lpGo()">اطلب خدمتك</button><a class="lp-btn lp-btn-glass" target="_blank" rel="noopener" href="'+esc(store)+'">تسوّق من المتجر</a></div></div></section>'+
-  '<footer class="lp-foot"><div class="lp-wrap lp-foot-in"><div class="lp-brand"><span class="lp-pill">'+LOGOF(40,true)+'</span><span style="font-size:13px;opacity:.7;font-weight:500">أبها – المملكة العربية السعودية</span></div><div class="lp-foot-l"><a target="_blank" rel="noopener" href="'+esc(store)+'">المتجر الإلكتروني</a><a href="tel:0577894369">0577894369</a><a href="#login">دخول الموظفين</a></div><small>© '+new Date().getFullYear()+' بصمة الاهتمام للاتصالات</small></div></footer>'+
+  '<footer class="lp-foot"><div class="lp-wrap lp-foot-in"><div class="lp-brand"><span class="lp-pill">'+LOGOF(40,true)+'</span><span style="font-size:13px;opacity:.7;font-weight:500">أبها – المملكة العربية السعودية</span></div><div class="lp-foot-l"><a target="_blank" rel="noopener" href="'+esc(store)+'">المتجر الإلكتروني</a><a href="tel:0577894369">0577894369</a><a href="#login">دخول منسوبي الشركة</a></div><small>© '+new Date().getFullYear()+' بصمة الاهتمام للاتصالات</small></div></footer>'+
   '<a class="lp-wa" target="_blank" rel="noopener" aria-label="واتساب" href="https://wa.me/'+STORE_WA+'">'+ic('whatsapp')+'</a></div>';
   $$('[data-to]').forEach(a=>a.onclick=e=>{e.preventDefault();const t=document.getElementById(a.dataset.to);if(t)window.scrollTo({top:t.getBoundingClientRect().top+scrollY-70,behavior:'smooth'})});
   const nav=$('#lpNav');const onS=()=>{if(nav)nav.classList.toggle('on',scrollY>30)};window.addEventListener('scroll',onS,{passive:true});onS();
@@ -1302,7 +1327,7 @@ function renderLogin(mode,email){
   mode=mode||'otp';document.body.classList.remove('lp-body');
   const emIn='<label class="f"><span>البريد الإلكتروني</span><input type="text" name="em" required inputmode="email" autocomplete="email" value="'+esc(email||'')+'" style="direction:ltr;text-align:right"></label>';
   if(mode==='otp'){
-    authShell('<h2 style="margin-top:0;text-align:center">تسجيل الدخول</h2><p class="sub" style="text-align:center">اكتب بريدك ويوصلك رمز دخول. ما تحتاج كلمة مرور.</p><form id="lf">'+emIn+'<div class="err" id="lerr"></div><button class="btn big" type="submit">أرسل رمز الدخول</button></form><p style="text-align:center;margin:12px 0 0"><a href="#" id="toPw" class="small">الدخول بكلمة المرور</a></p>');
+    authShell('<h2 style="margin-top:0;text-align:center">دخول منسوبي الشركة</h2><p class="sub" style="text-align:center">اكتب بريدك المسجّل لدى الشركة ويوصلك رمز دخول.</p><form id="lf">'+emIn+'<div class="err" id="lerr"></div><button class="btn big" type="submit">أرسل رمز الدخول</button></form><p style="text-align:center;margin:12px 0 0"><a href="#" id="toPw" class="small">الدخول بكلمة المرور</a></p>');
   }else if(mode==='code'){
     authShell('<h2 style="margin-top:0;text-align:center">'+ic('key')+'أدخل رمز الدخول</h2><p class="sub" style="text-align:center">أرسلنا رمز ورابط دخول إلى <b class="ltr">'+esc(email)+'</b>. اكتب الرمز هنا أو اضغط الرابط في الرسالة.</p><form id="lf"><label class="f"><span>الرمز</span><input type="text" name="code" required inputmode="numeric" autocomplete="one-time-code" maxlength="8" style="direction:ltr;text-align:center;font-size:24px;letter-spacing:8px"></label><div class="err" id="lerr"></div><button class="btn big" type="submit">دخول</button></form><p style="text-align:center;margin:12px 0 0"><a href="#" id="back" class="small">تغيير البريد</a></p>');
   }else{
