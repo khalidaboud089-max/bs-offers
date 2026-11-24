@@ -753,7 +753,7 @@ function staffEdit(id,s,fromReq,isNew){
     const cell=x=>{if(!x)return '<td class="pc"><span class="muted">—</span></td>';return '<td class="pc"><label title="'+esc(PERM_LABEL[x[0]]||'')+'"><input type="checkbox" data-perm="'+x[0]+'" '+(perms[x[0]]?'checked':'')+(mine(x[0])?'':' disabled')+'>'+(x[1]?'<span class="small muted" style="display:block">'+esc(x[1])+'</span>':'')+'</label></td>'};
     const setK=(k,v)=>{if(!mine(k))return;if(v)perms[k]=1;else delete perms[k]};
     const fixView=()=>PERM_ROWS.forEach(r=>{const keys=rowKeys(r).filter(k=>!r.v||k!==r.v[0]);if(r.v&&keys.some(k=>perms[k]))setK(r.v[0],1)});
-    const custom=()=>{role='custom';f.role.value='custom'};
+    const custom=()=>{role='custom';f.elements.role.value='custom'};
     const drawP=()=>{
       $('#permBox',m).innerHTML='<table class="tbl ptbl"><thead><tr><th>القسم</th>'+PERM_COLS.map(c=>'<th class="pc"><a href="#" data-colall="'+c[0]+'" title="تحديد/إلغاء العمود كامل">'+c[1]+'</a></th>').join('')+'<th>صلاحيات خاصة</th><th class="pc">الكل</th></tr></thead><tbody>'+
       PERM_ROWS.map((r,i)=>{const allOn=rowKeys(r).every(k=>perms[k]);
@@ -766,8 +766,8 @@ function staffEdit(id,s,fromReq,isNew){
     drawP();
     $('#pAll',m).onclick=()=>{ALL_PERMS.forEach(k=>setK(k,1));custom();drawP()};
     $('#pNone',m).onclick=()=>{Object.keys(perms).forEach(k=>delete perms[k]);custom();drawP()};
-    f.role.onchange=()=>{role=f.role.value;if(role==='custom')return;Object.keys(perms).forEach(k=>delete perms[k]);Object.keys(ROLE_PERMS[role]).forEach(k=>setK(k,1));drawP()};
-    f.onsubmit=async e=>{e.preventDefault();const body={name:f.name.value.trim(),phone:normPhone(f.phone.value)||'',role:f.role.value,branches:$$('input[name=br]:checked',m).map(x=>x.value),perms:Object.fromEntries(ALL_PERMS.filter(k=>perms[k]).map(k=>[k,1])),active:f.active.checked,updatedAt:nowISO()};
+    f.elements.role.onchange=()=>{role=f.elements.role.value;if(role==='custom')return;Object.keys(perms).forEach(k=>delete perms[k]);Object.keys(ROLE_PERMS[role]).forEach(k=>setK(k,1));drawP()};
+    f.onsubmit=async e=>{e.preventDefault();const body={name:f.name.value.trim(),phone:normPhone(f.phone.value)||'',role:f.elements.role.value,branches:$$('input[name=br]:checked',m).map(x=>x.value),perms:Object.fromEntries(ALL_PERMS.filter(k=>perms[k]).map(k=>[k,1])),active:f.active.checked,updatedAt:nowISO()};
       try{const ex=byId(S.staff||[],id);await db.doc('staff/'+id).set({...(ex||{}),...body,createdAt:(ex&&ex.createdAt)||nowISO()});if(fromReq){try{await db.doc('staffRequests/'+id).update({status:'approved'})}catch(x){}}close();toast('تم الحفظ')}catch(x){toast('ما تم الحفظ – تأكد إن عندك الصلاحية')}};
   });
 }
