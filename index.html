@@ -51,7 +51,7 @@ const USER={isOwner:async()=>!!(OF.who&&OF.who.owner),id:async()=>OF.who?OF.who.
 const DL={save({filename,data}){const blob=data instanceof Blob?data:new Blob([data]);const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500);return Promise.resolve({status:'saved'})}};
 window.claude={use:async n=>({db:DB,user:USER,downloads:DL})[n]||null};
 OF.loadPins=async()=>{try{const {data}=await sb.rpc('of_get_pins');OF.pins=data||{}}catch(e){}};
-OF.init=async()=>{const {data:{session}}=await sb.auth.getSession();OF.session=session;if(session){const {data}=await sb.rpc('of_whoami');OF.who=data;if(data&&(data.owner||(data.staff&&data.staff.perms&&(data.staff.perms.campaigns||data.staff.perms.approveTickets))))await OF.loadPins()}};
+OF.init=async()=>{const {data:{session}}=await sb.auth.getSession();OF.session=session;if(session){const {data}=await sb.rpc('of_whoami');OF.who=data;if(data&&(data.owner||(data.staff&&data.staff.perms&&['pins.view','campaigns.send','tickets.approve','campaigns','approveTickets'].some(k=>data.staff.perms[k]))))await OF.loadPins()}};
 sb.auth.onAuthStateChange((ev)=>{if(ev==='PASSWORD_RECOVERY')OF.recovery=true});
 })();
 </script>
@@ -65,6 +65,7 @@ a{color:var(--navy2)}
 .wrap{max-width:1100px;margin:0 auto;padding:16px}
 header.top{background:var(--navy);color:#fff}
 header.top .wrap{display:flex;align-items:center;gap:12px;padding-top:12px;padding-bottom:12px;flex-wrap:wrap}
+.ptbl td,.ptbl th{padding:7px 8px;vertical-align:middle}.ptbl .pc{text-align:center;min-width:64px}.ptbl input[type=checkbox]{width:18px;height:18px}.ptbl th a{color:inherit;text-decoration:none;border-bottom:1px dashed currentColor}
 .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:17px}
 .brand .logo{width:36px;height:36px;border-radius:10px;background:var(--teal);display:grid;place-items:center;font-weight:800;letter-spacing:.5px}
 .brand small{display:block;font-weight:500;font-size:12px;opacity:.8}
@@ -219,6 +220,7 @@ function modal(html,onMount){const bg=document.createElement('div');bg.className
 function confirmBox(title,body,okText,okClass){return new Promise(res=>{modal('<h2>'+esc(title)+'</h2><p class="muted">'+body+'</p><div class="row" style="justify-content:flex-start"><button class="btn '+(okClass||'')+'" data-ok>'+esc(okText||'تأكيد')+'</button><button class="btn sec" data-no>إلغاء</button></div>',(m,close)=>{m.querySelector('[data-ok]').onclick=()=>{close();res(true)};m.querySelector('[data-no]').onclick=()=>{close();res(false)};m.parentElement.addEventListener('click',e=>{if(e.target===m.parentElement||e.target.classList.contains('x'))res(false)})})})}
 const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
+const ssGet=k=>{try{return sessionStorage.getItem(k)}catch(e){return null}};const ssSet=(k,v)=>{try{if(v==null)sessionStorage.removeItem(k);else sessionStorage.setItem(k,v)}catch(e){}};
 
 // ---------- state ----------
 let db=null,user=null,me=null,isOwner=false,dl=null;
@@ -229,12 +231,37 @@ const byId=(arr,id)=>arr.find(x=>x.id===id);
 const nameCache={};
 async function names(ids){ids=[...new Set(ids.filter(Boolean))].filter(i=>!(i in nameCache));if(!ids.length||!user||!user.profiles)return;try{const ps=await user.profiles(ids);ids.forEach(i=>{nameCache[i]=(ps&&ps[i]&&ps[i].name)||'موظف'})}catch(e){}}
 const nm=id=>{if(!id)return '';if(window.OF&&OF.who&&id===OF.who.uid&&OF.who.owner)return 'المدير';const st=(S.staff||[]).find(x=>x.id===id);return (st&&st.name)||nameCache[id]||'موظف'};
-const ROLES={staff:'موظف فرع',supervisor:'مشرف',manager:'مدير'};
-const PERMS=[['deliver','تسليم الهدايا'],['notes','إضافة ملاحظات'],['tickets','إنشاء طلبات تعديل الرقم'],['viewPhone','رؤية الجوال كامل والتواصل مع العميل'],['approveTickets','اعتماد طلبات تعديل الرقم'],['customers','لوحة التحكم: الرئيسية والعملاء'],['campaigns','الحملات والتصدير']];
-const ROLE_PERMS={staff:{deliver:1,notes:1,tickets:1},supervisor:{deliver:1,notes:1,tickets:1,viewPhone:1,approveTickets:1},manager:{deliver:1,notes:1,tickets:1,viewPhone:1,approveTickets:1,customers:1,campaigns:1}};
+const ROLES={staff:'موظف فرع',supervisor:'مشرف',manager:'مدير فرع',admin:'مدير عام',custom:'مخصص'};
+// كل قسم: عرض / إضافة / تعديل / حذف + صلاحيات خاصة
+const PERM_ROWS=[
+ {t:'الرئيسية والإحصائيات',v:['home.view']},
+ {t:'الجهات والروابط',v:['orgs.view'],a:['orgs.add'],e:['orgs.edit','وإيقاف الرابط'],d:['orgs.delete']},
+ {t:'الاتفاقيات والهدايا',v:['agreements.view'],a:['agreements.add'],e:['agreements.edit'],d:['agreements.delete']},
+ {t:'العملاء',v:['customers.view'],a:['customers.add','استيراد Excel'],e:['customers.edit','البيانات والفرع'],d:['customers.delete'],x:[['customers.export','تصدير Excel'],['customers.phone','رؤية الجوال كامل والاتصال'],['customers.whatsapp','إرسال واتساب للعميل']]},
+ {t:'تسليم الهدايا (واجهة الموظف)',v:['deliver.view','استعلام'],a:['deliver.do','تسليم هدية'],d:['deliver.undo','إلغاء تسليم'],x:[['deliver.notes','إضافة ملاحظات'],['deliver.move','نقل العميل لفرع آخر']]},
+ {t:'رمز التسليم',v:['pins.view','عرض الرمز'],e:['pins.reset','رمز جديد'],x:[['pins.unlock','فتح البطاقة المقفلة']]},
+ {t:'الحملات',v:['campaigns.view'],a:['campaigns.send','إنشاء وتصدير وإرسال']},
+ {t:'طلبات تعديل الرقم',v:['tickets.view'],a:['tickets.add','إنشاء طلب'],e:['tickets.approve','اعتماد'],d:['tickets.reject','رفض']},
+ {t:'الموظفين والصلاحيات',v:['staff.view'],a:['staff.add','قبول الانضمام'],e:['staff.edit','وإيقاف'],d:['staff.delete']},
+ {t:'الفروع',v:['branches.view'],a:['branches.add'],e:['branches.edit'],d:['branches.delete']},
+ {t:'الإعدادات العامة وأحكام الهدر',v:['settings.view'],e:['settings.edit']}
+];
+const PERM_COLS=[['v','عرض'],['a','إضافة'],['e','تعديل'],['d','حذف']];
+const rowKeys=r=>[...PERM_COLS.map(c=>r[c[0]]).filter(Boolean),...(r.x||[])].map(x=>x[0]);
+const ALL_PERMS=PERM_ROWS.flatMap(rowKeys);
+const PERM_LABEL=Object.fromEntries(PERM_ROWS.flatMap(r=>[...PERM_COLS.filter(c=>r[c[0]]).map(c=>[r[c[0]][0],r.t+': '+c[1]+(r[c[0]][1]?' ('+r[c[0]][1]+')':'')]),...(r.x||[]).map(x=>[x[0],r.t+': '+x[1]])]));
+const asSet=a=>Object.fromEntries(a.map(k=>[k,1]));
+const P_STAFF=['deliver.view','deliver.do','deliver.notes','tickets.add'];
+const P_SUP=P_STAFF.concat(['customers.phone','deliver.move','deliver.undo','tickets.view','tickets.approve','tickets.reject','pins.view','pins.unlock']);
+const P_MGR=P_SUP.concat(['home.view','customers.view','customers.export','customers.whatsapp','campaigns.view','campaigns.send','pins.reset','orgs.view','agreements.view','staff.view','branches.view']);
+const ROLE_PERMS={staff:asSet(P_STAFF),supervisor:asSet(P_SUP),manager:asSet(P_MGR),admin:asSet(ALL_PERMS),custom:{}};
+const LEGACY={deliver:['deliver.view','deliver.do'],notes:['deliver.notes'],tickets:['tickets.add'],viewPhone:['customers.phone'],approveTickets:['tickets.view','tickets.approve','tickets.reject','pins.unlock'],customers:['home.view','customers.view'],campaigns:['campaigns.view','campaigns.send','customers.export']};
+function normPerms(p){const o={};Object.entries(p||{}).forEach(([k,v])=>{if(!v)return;if(LEGACY[k])LEGACY[k].forEach(x=>o[x]=1);else o[k]=1});return o}
 let staffMe=null;
-function can(p){if(isOwner)return true;if(!staffMe||staffMe.active===false)return false;return !!(staffMe.perms||{})[p]}
-const isPanelUser=()=>isOwner||can('customers')||can('approveTickets')||can('campaigns');
+function can(p){if(isOwner)return true;if(!staffMe||staffMe.active===false)return false;return !!normPerms(staffMe.perms)[p]}
+const canAny=(...ps)=>ps.some(can);
+const ADMIN_VIEWS=['home.view','orgs.view','agreements.view','customers.view','campaigns.view','tickets.view','staff.view','branches.view','settings.view'];
+const isPanelUser=()=>isOwner||canAny(...ADMIN_VIEWS);
 function branchList(){const s=S.settings||{};if(s.branchList&&s.branchList.length)return s.branchList;return (s.branches&&s.branches.length?s.branches:['الفرع 1','الفرع 2']).map((n,i)=>({id:'b'+i,name:n}))}
 function myBranches(){const all=branchList().map(b=>b.name);if(isOwner||!staffMe||!(staffMe.branches||[]).length)return all;const m=all.filter(b=>staffMe.branches.includes(b));return m.length?m:all}
 const DIST_MODES={any:'بدون تخصيص – يستلم من أي فرع',single:'فرع واحد للجهة كاملة',fill:'تعبئة بالسقف – فرع ورا فرع',split:'تقسيم بالنسبة بين الفروع',choose:'العميل يختار فرعه وقت التسجيل'};
@@ -258,7 +285,7 @@ const svcUrl=()=>(S.settings&&S.settings.servicesUrl)||'https://blhtm.com';
 function svcLine(){const t=(S.settings&&S.settings.servicesText)||DEFAULT_SVC;return 'تعرّف على خدماتنا: '+t+'\n'+svcUrl()}
 function addSvc(t){if(S.settings&&S.settings.servicesOff)return t.split('{رابط_خدماتنا}').join('');if(t.indexOf('{رابط_خدماتنا}')<0)t+='\n\n'+svcLine();return t.split('{رابط_خدماتنا}').join(svcUrl())}
 function brLine(c){if(!c.branch)return '';const b=branchInfo(c.branch);return 'فرع الاستلام: '+b.name+(b.address?' – '+b.address:'')+(b.map?'\nالموقع: '+b.map:'')+(b.phone?'\nللتواصل: '+b.phone:'')}
-const maskPhone=p=>{const l=localPhone(p);return can('viewPhone')?l:(l.slice(0,3)+'••••'+l.slice(-3))};
+const maskPhone=p=>{const l=localPhone(p);return can('customers.phone')?l:(l.slice(0,3)+'••••'+l.slice(-3))};
 
 function agreementOf(c){return byId(S.agreements,c.agreementId)}
 const dayKey=iso=>{const d=iso?new Date(iso):new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
@@ -293,7 +320,7 @@ let lastRoute='';
 function route(){
   const h=location.hash.replace('#','');
   $$('.modal-bg').forEach(m=>m.remove());
-  const wantsPanel=(h===''||h==='admin')&&isPanelUser()&&(isOwner||h==='admin');
+  const wantsPanel=(h===''||h==='admin'||(h==='staff'&&!isOwner&&!can('deliver.view')))&&isPanelUser()&&(isOwner||h==='admin'||!can('deliver.view'));
   const isStaffRoute=!h.startsWith('reg-')&&!wantsPanel;
   if(isStaffRoute&&lastRoute!=='staff'){if(staffUnsub){staffUnsub();staffUnsub=null}staffCurrent=null;lastStaff=null;sel=new Set()}
   lastRoute=isStaffRoute?'staff':h;
@@ -301,14 +328,24 @@ function route(){
   if(OF.recovery)return renderSetPassword();
   if(!OF.session)return renderLogin();
   if(!isOwner&&(!staffMe||staffMe.active===false))return renderJoin();
+  if(!ssGet('bs_br_ok'))return renderBranchPick();
   if(h.startsWith('card-'))return renderPublicCard(h.slice(5));
   if(wantsPanel)return renderAdmin();
   return renderStaff();
 }
+function renderBranchPick(){
+  const L=myBranches();
+  if(L.length===1){lsSet('bs_branch',L[0]);ssSet('bs_br_ok','1');return route()}
+  const cur=lsGet('bs_branch');
+  authShell('<h2 style="text-align:center;margin-top:0">'+ic('store')+'اختر الفرع اللي أنت فيه</h2><p class="sub" style="text-align:center">'+esc(isOwner?'المدير':(staffMe&&staffMe.name)||'')+' – التسليمات والعمليات بتتسجل على هذا الفرع.</p>'+L.map(n=>{const b=branchInfo(n);return '<button class="btn '+(n===cur?'':'sec')+' big" data-pickbr="'+esc(n)+'" style="width:100%;margin-bottom:10px;justify-content:space-between;text-align:right"><span><b>'+esc(n)+'</b>'+(b.address?'<span class="small" style="display:block;opacity:.75;font-weight:400">'+esc(b.address)+'</span>':'')+'</span>'+(n===cur?'<span class="small">آخر فرع</span>':'')+'</button>'}).join('')+'<p style="text-align:center;margin:8px 0 0"><a href="#" class="small" onclick="sessionStorage.clear();OF.sb.auth.signOut().then(()=>{location.hash=\'\';location.reload()});return false">خروج</a></p>');
+  $$('[data-pickbr]').forEach(b=>b.onclick=()=>{lsSet('bs_branch',b.dataset.pickbr);ssSet('bs_br_ok','1');route()});
+}
+function changeBranch(){ssSet("bs_br_ok",null);route()}window.changeBranch=changeBranch;
 function shell(active,inner){
-  const who=!isOwner&&staffMe?'<div class="small" style="opacity:.85">'+ic('user')+''+esc(staffMe.name||'')+' · '+(ROLES[staffMe.role]||'')+'</div>':'';
-  const sw=who+(isPanelUser()&&(isOwner||staffMe)?'<div class="switch"><a href="#admin" class="'+(active==='admin'?'on':'')+'">لوحة التحكم</a><a href="#staff" class="'+(active==='staff'?'on':'')+'">واجهة الموظف</a></div>':'');
-  const out=OF.session?'<a href="#" id="logoutBtn" class="small" style="color:#fff;opacity:.8;text-decoration:none;margin-inline-start:8px" onclick="OF.sb.auth.signOut().then(()=>{location.hash=\'\';location.reload()});return false">خروج</a>':'';
+  const curBr=lsGet('bs_branch');const brChip=curBr&&myBranches().length>1?'<a href="#" class="small" style="color:#fff;opacity:.9;text-decoration:none;border:1px solid rgba(255,255,255,.35);border-radius:999px;padding:3px 10px;margin-inline-end:8px" onclick="changeBranch();return false" title="تغيير الفرع">'+ic('store')+esc(curBr)+' · تغيير</a>':'';
+  const who=brChip+(!isOwner&&staffMe?'<div class="small" style="opacity:.85">'+ic('user')+''+esc(staffMe.name||'')+' · '+(ROLES[staffMe.role]||'')+'</div>':'');
+  const sw=who+(isPanelUser()&&(isOwner||staffMe)&&can('deliver.view')?'<div class="switch"><a href="#admin" class="'+(active==='admin'?'on':'')+'">لوحة التحكم</a><a href="#staff" class="'+(active==='staff'?'on':'')+'">واجهة الموظف</a></div>':'');
+  const out=OF.session?'<a href="#" id="logoutBtn" class="small" style="color:#fff;opacity:.8;text-decoration:none;margin-inline-start:8px" onclick="sessionStorage.clear();OF.sb.auth.signOut().then(()=>{location.hash=\'\';location.reload()});return false">خروج</a>':'';
   return '<header class="top"><div class="wrap"><div class="brand"><div class="logo">'+LOGO(40)+'</div><div>بصمة الاهتمام للاتصالات<small>نظام عروض الجهات</small></div></div><div class="spacer"></div>'+sw+out+'</div></header><div class="demo">رسائل واتساب تُرسل حالياً بزر جاهز – الإرسال التلقائي من 0577894369 عبر منصة هاتف قريباً.</div><div class="wrap">'+inner+'</div>';
 }
 
@@ -324,7 +361,7 @@ function startSubs(){
   db.collection('customers').onSnapshot(async s=>{S.customers=s.docs.map(d=>({id:d.id,...d.data()}));S.loaded.c=true;done();rerender();
     if(isOwner){for(const c of S.customers){if(!(OF.pins&&OF.pins[c.id])&&!pinFilled.has(c.id)){pinFilled.add(c.id);try{const r=await OF.sb.rpc('of_new_pin',{p_code:c.id});if(r.data)OF.pins[c.id]=r.data}catch(e){}}}}},err);
   db.collection('staff').onSnapshot(s=>{S.staff=s.docs.map(d=>({id:d.id,...d.data()}));rerender()},err);
-  if(isOwner)db.collection('staffRequests').onSnapshot(s=>{S.staffReqs=s.docs.map(d=>({id:d.id,...d.data()}));const n=S.staffReqs.filter(r=>r.status==='pending').length;const b=$('[data-tab="settings"]');if(b)b.textContent='الإعدادات'+(n?' ('+n+')':'');rerender()},err);
+  if(can('staff.view'))db.collection('staffRequests').onSnapshot(s=>{S.staffReqs=s.docs.map(d=>({id:d.id,...d.data()}));const n=S.staffReqs.filter(r=>r.status==='pending').length;const b=$('[data-tab="settings"]');if(b)b.textContent='الإعدادات'+(n?' ('+n+')':'');rerender()},err);
   db.collection('tickets').onSnapshot(s=>{S.tickets=s.docs.map(d=>({id:d.id,...d.data()}));const n=S.tickets.filter(t=>t.status==='open').length;const b=$('[data-tab="tickets"]');if(b)b.textContent='الطلبات'+(n?' ('+n+')':'');rerender()},err);
   db.collection('deliveries').onSnapshot(s=>{S.deliveries=s.docs.map(d=>({id:d.id,...d.data()}));rerender()},err);
   db.doc('settings/main').onSnapshot(s=>{S.settings=s.exists?s.data():{};S.loaded.s=true;rerender()},err);
@@ -337,7 +374,7 @@ function renderAdmin(){
   startSubs();
   const reqN=(S.staffReqs||[]).filter(r=>r.status==='pending').length;
   let tabs=[['home','الرئيسية'],['orgs','الجهات والروابط'],['agreements','الاتفاقيات والهدايا'],['customers','العملاء'],['campaigns','الحملات'],['tickets','الطلبات'+((S.tickets||[]).filter(t=>t.status==='open').length?' ('+S.tickets.filter(t=>t.status==='open').length+')':'')],['settings','الإعدادات'+(reqN?' ('+reqN+')':'')]];
-  if(!isOwner){const allow={home:can('customers'),customers:can('customers'),campaigns:can('campaigns'),tickets:can('approveTickets')};tabs=tabs.filter(t=>allow[t[0]]);if(!tabs.some(t=>t[0]===adminTab))adminTab=(tabs[0]||['tickets'])[0]}
+  if(!isOwner){const allow={home:can('home.view'),orgs:can('orgs.view'),agreements:can('agreements.view'),customers:can('customers.view'),campaigns:can('campaigns.view'),tickets:can('tickets.view'),settings:canAny('staff.view','branches.view','settings.view')};tabs=tabs.filter(t=>allow[t[0]]);if(!tabs.some(t=>t[0]===adminTab))adminTab=(tabs[0]||['home'])[0]}
   $('#app').innerHTML=shell('admin','<nav class="tabs">'+tabs.map(t=>'<button data-tab="'+t[0]+'" class="'+(adminTab===t[0]?'on':'')+'">'+t[1]+'</button>').join('')+'</nav><div id="abody"></div>');
   $$('nav.tabs button').forEach(b=>b.onclick=()=>{adminTab=b.dataset.tab;$$('nav.tabs button').forEach(x=>x.classList.toggle('on',x===b));drawAdminBody()});
   drawAdminBody();
@@ -345,6 +382,7 @@ function renderAdmin(){
 function drawAdminBody(){
   const el=$('#abody');if(!el)return;
   if(!(S.loaded.a&&S.loaded.o&&S.loaded.c)){el.innerHTML='<div class="card empty">جاري تحميل البيانات…</div>';return}
+  if(!isOwner&&!$('nav.tabs button[data-tab="'+adminTab+'"]')){el.innerHTML='<div class="card empty">ما عندك صلاحية على أي قسم في لوحة التحكم.</div>';return}
   ({home:aHome,orgs:aOrgs,agreements:aAgreements,customers:aCustomers,campaigns:aCampaigns,tickets:aTickets,settings:aSettings})[adminTab](el);
 }
 function aHome(el){
@@ -375,8 +413,9 @@ let editOrg=null;
 function aOrgs(el){
   const o=editOrg?byId(S.orgs,editOrg)||{}:{};
   const sec=o.sector||'school';
+  const canForm=editOrg?can('orgs.edit'):can('orgs.add');
   const agOpts=s=>S.agreements.filter(a=>a.sector===s).map(a=>'<option value="'+a.id+'" '+(a.id===o.agreementId?'selected':'')+'>'+esc(a.name)+(isExpired(a)?' (منتهية)':'')+'</option>').join('');
-  el.innerHTML='<div class="grid two"><form class="card" id="orgForm"><h2>'+(editOrg?'تعديل جهة':'إضافة جهة جديدة')+'</h2>'+
+  el.innerHTML='<div class="grid two"><form class="card'+(canForm?'':' hide')+'" id="orgForm"><h2>'+(editOrg?'تعديل جهة':'إضافة جهة جديدة')+'</h2>'+
   '<label class="f"><span>اسم الجهة</span><input type="text" name="name" required value="'+esc(o.name||'')+'" placeholder="مثال: مدرسة النور الثانوية"></label>'+
   '<label class="f"><span>القطاع</span><select name="sector">'+Object.entries(SECTORS).map(([k,v])=>'<option value="'+k+'" '+(k===sec?'selected':'')+'>'+v+'</option>').join('')+'</select></label>'+
   '<label class="f"><span>الاتفاقية (العرض المطبّق)</span><select name="agreementId" id="agSel">'+(agOpts(sec)||'<option value="">— أضف اتفاقية لهذا القطاع أولاً —</option>')+'</select></label>'+
@@ -392,7 +431,7 @@ function aOrgs(el){
     return '<div class="orgcard"><div class="row" style="justify-content:space-between"><b style="font-size:16px">'+esc(org.name)+'</b><span class="pill '+SECTOR_PILL[org.sector]+'">'+SECTORS[org.sector]+'</span></div>'+
     '<div class="small muted" style="margin-top:6px">الاتفاقية: '+esc(a?a.name:'—')+(a&&isExpired(a)?' <span class="pill p-bad">منتهية</span>':'')+' · '+cs.length+' مسجّل · '+g+' استلموا'+(org.active===false?' · <span class="pill p-bad">الرابط موقوف</span>':'')+(org.restrict?' · <span class="pill p-s1">قائمة معتمدة ('+(org.rosterCount||0)+')</span>':'')+'</div>'+distSummaryHtml(org)+
     '<div class="link"><input type="text" readonly value="'+esc(link)+'"><button class="btn sec sm" data-copy="'+esc(link)+'">نسخ</button></div>'+
-    '<div class="row" style="margin-top:10px"><button class="btn sec sm" data-qr="'+org.id+'">QR الرابط</button>'+(org.contactPhone?'<a class="btn wa sm" target="_blank" rel="noopener" href="'+esc(waLink(org.contactPhone,contactMsg))+'">إرسال للمسؤول</a>':'')+'<button class="btn sec sm" data-edit="'+org.id+'">تعديل</button><button class="btn sec sm" data-toggle="'+org.id+'">'+(org.active===false?'تفعيل الرابط':'إيقاف الرابط')+'</button><a class="btn sec sm" href="#reg-'+org.id+'">معاينة</a></div></div>'}).join('')||'<div class="card empty">ما فيه جهات بعد.</div>')+'</div>';
+    '<div class="row" style="margin-top:10px"><button class="btn sec sm" data-qr="'+org.id+'">QR الرابط</button>'+(org.contactPhone?'<a class="btn wa sm" target="_blank" rel="noopener" href="'+esc(waLink(org.contactPhone,contactMsg))+'">إرسال للمسؤول</a>':'')+''+(can('orgs.edit')?'<button class="btn sec sm" data-edit="'+org.id+'">تعديل</button><button class="btn sec sm" data-toggle="'+org.id+'">'+(org.active===false?'تفعيل الرابط':'إيقاف الرابط')+'</button>':'')+(can('orgs.delete')?'<button class="btn bad sm" data-odel="'+org.id+'">حذف</button>':'')+'<a class="btn sec sm" href="#reg-'+org.id+'">معاينة</a></div></div>'}).join('')||'<div class="card empty">ما فيه جهات بعد.</div>')+'</div>';
   const f=$('#orgForm',el);
   const parsePhones=t=>[...new Set((toLatin(t).match(/(?:\+?966|0)?5\d{8}/g)||[]).map(normPhone).filter(Boolean))];
   const rc=()=>{$('#rcount',el).textContent=parsePhones(f.roster.value).length+' رقم'};
@@ -422,6 +461,7 @@ function aOrgs(el){
   $$('[data-copy]',el).forEach(b=>b.onclick=()=>copy(b.dataset.copy));
   $$('[data-edit]',el).forEach(b=>b.onclick=()=>{editOrg=b.dataset.edit;aOrgs(el);window.scrollTo({top:0,behavior:'smooth'})});
   $$('[data-toggle]',el).forEach(b=>b.onclick=async()=>{const o=byId(S.orgs,b.dataset.toggle);try{await db.doc('orgs/'+o.id).update({active:o.active===false})}catch(e){toast('تعذّر التحديث')}});
+  $$('[data-odel]',el).forEach(b=>b.onclick=async()=>{const o=byId(S.orgs,b.dataset.odel);const n=S.customers.filter(c=>c.orgId===o.id).length;if(!(await confirmBox('حذف '+o.name,'ينحذف رابط التسجيل نهائياً.'+(n?' العملاء المسجّلين ('+n+') يبقون في «العملاء».':''),'حذف الجهة','bad')))return;try{await db.doc('orgs/'+o.id).delete();try{await db.doc('rosters/'+o.id).delete()}catch(x){}toast('تم حذف الجهة')}catch(e){toast('تعذّر الحذف')}});
   $$('[data-qr]',el).forEach(b=>b.onclick=()=>{const o=byId(S.orgs,b.dataset.qr);const link=regLink(o);modal('<h2>QR رابط التسجيل</h2><p class="muted small">'+esc(o.name)+' – يقدر المسؤول يطبعه ويعلّقه أو يرسله صورة.</p><div class="qrbox" id="qrL"></div><p class="small ltr" style="word-break:break-all">'+esc(link)+'</p>',m=>drawQR($('#qrL',m),link,240))});
 }
 
@@ -429,7 +469,8 @@ function aOrgs(el){
 let editAg=null;
 function aAgreements(el){
   const a=editAg?byId(S.agreements,editAg)||{}:{};
-  el.innerHTML='<div class="grid two"><form class="card" id="agForm"><h2>'+(editAg?'تعديل اتفاقية':'اتفاقية جديدة')+'</h2>'+
+  const canAgForm=editAg?can('agreements.edit'):can('agreements.add');
+  el.innerHTML='<div class="grid two"><form class="card'+(canAgForm?'':' hide')+'" id="agForm"><h2>'+(editAg?'تعديل اتفاقية':'اتفاقية جديدة')+'</h2>'+
   '<label class="f"><span>اسم الاتفاقية</span><input type="text" name="name" required value="'+esc(a.name||'')+'" placeholder="مثال: عرض المدارس – الفصل الثاني"></label>'+
   '<div class="grid two"><label class="f"><span>القطاع</span><select name="sector">'+Object.entries(SECTORS).map(([k,v])=>'<option value="'+k+'" '+(k===(a.sector||'school')?'selected':'')+'>'+v+'</option>').join('')+'</select></label><label class="f"><span>تاريخ الانتهاء</span><input type="date" name="endsAt" value="'+esc(a.endsAt||'')+'"></label></div>'+
   '<div class="f" style="margin-bottom:10px"><span class="small muted" style="display:block;margin-bottom:4px;font-weight:500">الهدايا المتاحة للاختيار</span><div id="gList"></div><div class="row" style="margin-top:6px"><input type="text" id="gNew" placeholder="اكتب اسم الهدية واضغط إضافة" style="flex:1"><button class="btn sec" type="button" id="gAdd">+ إضافة</button></div></div>'+
@@ -441,7 +482,7 @@ function aAgreements(el){
   '<label class="chk"><input type="checkbox" name="active" '+(a.active===false?'':'checked')+'> الاتفاقية فعّالة</label>'+
   '<div class="row"><button class="btn" type="submit">'+(editAg?'حفظ':'إضافة الاتفاقية')+'</button>'+(editAg?'<button class="btn sec" type="button" id="cancelAg">إلغاء</button>':'')+'</div>'+
   '<p class="small muted">تعديل الهدايا يطبّق على المسجّلين الجدد فقط؛ اللي سجّلوا قبل يحتفظون بهداياهم وقت التسجيل.</p></form><div>'+
-  Object.keys(SECTORS).map(s=>{const list=S.agreements.filter(x=>x.sector===s);return '<div class="card"><h3><span class="pill '+SECTOR_PILL[s]+'">'+SECTORS[s]+'</span></h3>'+(list.length?list.map(x=>{const n=S.orgs.filter(o=>o.agreementId===x.id).length;const stt=x.active===false?'<span class="pill p-mut">موقوفة</span>':isExpired(x)?'<span class="pill p-bad">منتهية</span>':'<span class="pill p-ok">فعّالة</span>';return '<div style="padding:10px 0;border-top:1px solid var(--line)"><div class="row" style="justify-content:space-between"><b>'+esc(x.name)+'</b>'+stt+'</div><div class="small muted">ينتهي: '+fmtD(x.endsAt)+' · '+n+' جهة · '+((+x.giftsAllowed||1)===1?'يختار هدية وحدة':'يختار '+x.giftsAllowed+' هدايا')+(x.maxRegs?' · حد '+x.maxRegs+' لكل جهة':'')+'</div><div class="small" style="margin:6px 0">'+(x.gifts||[]).map(g=>{const u=S.deliveries.filter(d=>d.giftId===g.id).length;const left=g.stock?g.stock-u:null;return ''+ic('gift')+''+esc(g.name)+' <span class="muted">· مُسلّم '+u+(g.stock?' من '+g.stock:'')+'</span>'+(left!==null&&left<=0?' <span class="pill p-bad">نفدت</span>':left!==null&&left<=Math.ceil(g.stock*0.1)?' <span class="pill p-warn">قربت تخلص ('+left+')</span>':'')}).join('<br>')+(x.validDays?'<div class="muted">صلاحية العميل: '+x.validDays+' يوم من تسجيله</div>':'')+'</div><button class="btn sec sm" data-eag="'+x.id+'">تعديل</button></div>'}).join(''):'<div class="small muted">ما فيه اتفاقية لهذا القطاع.</div>')+'</div>'}).join('')+'</div></div>';
+  Object.keys(SECTORS).map(s=>{const list=S.agreements.filter(x=>x.sector===s);return '<div class="card"><h3><span class="pill '+SECTOR_PILL[s]+'">'+SECTORS[s]+'</span></h3>'+(list.length?list.map(x=>{const n=S.orgs.filter(o=>o.agreementId===x.id).length;const stt=x.active===false?'<span class="pill p-mut">موقوفة</span>':isExpired(x)?'<span class="pill p-bad">منتهية</span>':'<span class="pill p-ok">فعّالة</span>';return '<div style="padding:10px 0;border-top:1px solid var(--line)"><div class="row" style="justify-content:space-between"><b>'+esc(x.name)+'</b>'+stt+'</div><div class="small muted">ينتهي: '+fmtD(x.endsAt)+' · '+n+' جهة · '+((+x.giftsAllowed||1)===1?'يختار هدية وحدة':'يختار '+x.giftsAllowed+' هدايا')+(x.maxRegs?' · حد '+x.maxRegs+' لكل جهة':'')+'</div><div class="small" style="margin:6px 0">'+(x.gifts||[]).map(g=>{const u=S.deliveries.filter(d=>d.giftId===g.id).length;const left=g.stock?g.stock-u:null;return ''+ic('gift')+''+esc(g.name)+' <span class="muted">· مُسلّم '+u+(g.stock?' من '+g.stock:'')+'</span>'+(left!==null&&left<=0?' <span class="pill p-bad">نفدت</span>':left!==null&&left<=Math.ceil(g.stock*0.1)?' <span class="pill p-warn">قربت تخلص ('+left+')</span>':'')}).join('<br>')+(x.validDays?'<div class="muted">صلاحية العميل: '+x.validDays+' يوم من تسجيله</div>':'')+'</div>'+(can('agreements.edit')?'<button class="btn sec sm" data-eag="'+x.id+'">تعديل</button> ':'')+(can('agreements.delete')?'<button class="btn bad sm" data-agdel="'+x.id+'">حذف</button>':'')+'</div>'}).join(''):'<div class="small muted">ما فيه اتفاقية لهذا القطاع.</div>')+'</div>'}).join('')+'</div></div>';
   const f=$('#agForm',el);
   let gl=(a.gifts||[]).map(g=>({id:g.id,name:g.name,stock:+g.stock||0}));
   const usedOf=gid=>S.deliveries.filter(d=>d.giftId===gid).length;
@@ -455,6 +496,7 @@ function aAgreements(el){
     const gifts=gl.map(g=>({id:g.id,name:g.name,stock:+g.stock||0}));
     const body={name:f.name.value.trim(),sector:f.sector.value,endsAt:f.endsAt.value||'',gifts,message:f.message.value,active:f.active.checked,giftsAllowed:+f.giftsAllowed.value||1,maxRegs:parseInt(toLatin(f.maxRegs.value),10)||0,validDays:parseInt(toLatin(f.validDays.value),10)||0};
     try{if(editAg){await db.doc('agreements/'+editAg).update(body)}else{await db.doc('agreements/a'+rid(6)).set({...body,createdAt:nowISO()})}toast('تم الحفظ');editAg=null;document.activeElement&&document.activeElement.blur();aAgreements(el)}catch(err){toast('ما تم الحفظ: '+(err.code||''))}};
+  $$('[data-agdel]',el).forEach(b=>b.onclick=async()=>{const x=byId(S.agreements,b.dataset.agdel);const n=S.orgs.filter(o=>o.agreementId===x.id).length;if(n){toast('الاتفاقية مربوطة بـ '+n+' جهة – غيّر اتفاقيتهم أو أوقفها بدل الحذف');return}if(!(await confirmBox('حذف '+x.name,'تنحذف الاتفاقية نهائياً. العملاء المسجّلين يحتفظون بهداياهم.','حذف','bad')))return;try{await db.doc('agreements/'+x.id).delete();toast('تم الحذف')}catch(e){toast('تعذّر الحذف')}});
   $$('[data-eag]',el).forEach(b=>b.onclick=()=>{editAg=b.dataset.eag;aAgreements(el);window.scrollTo({top:0,behavior:'smooth'})});
 }
 
@@ -491,15 +533,16 @@ function filterBar(f,id){
 }
 function bindFilterBar(root,f,onChange){$$('[data-f]',root).forEach(x=>{const ev=x.tagName==='INPUT'&&x.type==='search'?'input':'change';x.addEventListener(ev,()=>{f[x.dataset.f]=x.value;onChange()})});const cl=$('[data-fclear]',root);if(cl)cl.onclick=()=>{Object.keys(f).forEach(k=>f[k]='');$$('[data-f]',root).forEach(x=>x.value='');onChange()}}
 function aCustomers(el){
-  el.innerHTML='<div class="card" data-keep>'+filterBar(custFilter)+'<div class="row" style="margin-top:10px"><button class="btn sec" id="exp">'+ic('download')+'تصدير Excel</button><button class="btn sec" id="imp">'+ic('upload')+'استيراد Excel</button><button class="btn" id="camp">'+ic('megaphone')+'حملة إعادة استهداف للنتائج</button><button class="btn wa" id="waq">إرسال متتابع لغير المُرسل لهم</button></div></div><div class="card"><div id="ctbl"></div></div>';
-  const draw=()=>{const list=filteredCustomers();$('#ctbl',el).innerHTML=list.length?'<div class="small muted" style="margin-bottom:8px">'+list.length+' عميل من '+S.customers.length+'</div><div class="scroll"><table class="tbl"><thead><tr><th>الاسم</th><th>الجوال</th><th>الجهة</th><th>الكود</th><th>التسجيل</th><th>الحالة</th><th>واتساب</th><th></th></tr></thead><tbody>'+list.slice(0,300).map(c=>{const s=custStatus(c);return '<tr><td><b>'+esc(c.name)+'</b>'+(c.source==='import'?' <span class="pill p-mut">مستورد</span>':'')+'</td><td><span class="ltr">'+esc(localPhone(c.phone))+'</span></td><td>'+esc(c.orgLabel||'')+'</td><td><span class="code">'+esc(c.id)+'</span></td><td class="small muted">'+fmtDT(c.createdAt)+'</td><td><span class="pill '+s.cls+'">'+s.t+(s.g>1?' '+s.r+'/'+s.g:'')+'</span></td><td><a class="btn wa sm" target="_blank" rel="noopener" data-wa="'+c.id+'" href="'+esc(waLink(c.phone,fillMsg(c)))+'">'+(c.waSentAt?'إعادة':'إرسال')+'</a>'+(c.waSentAt?' <span class="small muted">'+ic('check')+'</span>':'')+'</td><td><button class="btn sec sm" data-det="'+c.id+'">تفاصيل</button></td></tr>'}).join('')+'</tbody></table></div>'+(list.length>300?'<p class="small muted">يظهر أول 300 – استخدم الفلاتر أو التصدير للباقي.</p>':''):'<div class="empty">ما فيه عملاء بهذا الفلتر.</div>';
+  el.innerHTML='<div class="card" data-keep>'+filterBar(custFilter)+'<div class="row" style="margin-top:10px">'+(can('customers.export')?'<button class="btn sec" id="exp">'+ic('download')+'تصدير Excel</button>':'')+(can('customers.add')?'<button class="btn sec" id="imp">'+ic('upload')+'استيراد Excel</button>':'')+(can('campaigns.send')?'<button class="btn" id="camp">'+ic('megaphone')+'حملة إعادة استهداف للنتائج</button>':'')+(can('customers.whatsapp')?'<button class="btn wa" id="waq">إرسال متتابع لغير المُرسل لهم</button>':'')+'</div></div><div class="card"><div id="ctbl"></div></div>';
+  const draw=()=>{const list=filteredCustomers();$('#ctbl',el).innerHTML=list.length?'<div class="small muted" style="margin-bottom:8px">'+list.length+' عميل من '+S.customers.length+'</div><div class="scroll"><table class="tbl"><thead><tr><th>الاسم</th><th>الجوال</th><th>الجهة</th><th>الكود</th><th>التسجيل</th><th>الحالة</th><th>واتساب</th><th></th></tr></thead><tbody>'+list.slice(0,300).map(c=>{const s=custStatus(c);return '<tr><td><b>'+esc(c.name)+'</b>'+(c.source==='import'?' <span class="pill p-mut">مستورد</span>':'')+'</td><td><span class="ltr">'+esc(maskPhone(c.phone))+'</span></td><td>'+esc(c.orgLabel||'')+'</td><td><span class="code">'+esc(c.id)+'</span></td><td class="small muted">'+fmtDT(c.createdAt)+'</td><td><span class="pill '+s.cls+'">'+s.t+(s.g>1?' '+s.r+'/'+s.g:'')+'</span></td><td>'+(can('customers.whatsapp')?'<a class="btn wa sm" target="_blank" rel="noopener" data-wa="'+c.id+'" href="'+esc(waLink(c.phone,fillMsg(c)))+'">'+(c.waSentAt?'إعادة':'إرسال')+'</a>':'')+(c.waSentAt?' <span class="small muted">'+ic('check')+'</span>':'')+'</td><td><button class="btn sec sm" data-det="'+c.id+'">تفاصيل</button></td></tr>'}).join('')+'</tbody></table></div>'+(list.length>300?'<p class="small muted">يظهر أول 300 – استخدم الفلاتر أو التصدير للباقي.</p>':''):'<div class="empty">ما فيه عملاء بهذا الفلتر.</div>';
     $$('[data-wa]',el).forEach(a=>a.addEventListener('click',()=>markWa(a.dataset.wa)));
     $$('[data-det]',el).forEach(b=>b.onclick=()=>custDetail(b.dataset.det));};
   draw();bindFilterBar(el,custFilter,draw);
-  $('#exp',el).onclick=()=>exportXLSX(filteredCustomers());
-  $('#imp',el).onclick=importDialog;
-  $('#camp',el).onclick=()=>{campDraft={filter:{...custFilter}};adminTab='campaigns';renderAdmin()};
-  $('#waq',el).onclick=()=>waQueue();
+  const on=(id,f)=>{const x=$(id,el);if(x)x.onclick=f};
+  on('#exp',()=>exportXLSX(filteredCustomers()));
+  on('#imp',importDialog);
+  on('#camp',()=>{campDraft={filter:{...custFilter}};adminTab='campaigns';renderAdmin()});
+  on('#waq',()=>waQueue());
 }
 function waQueue(){
   const q=S.customers.filter(c=>!c.waSentAt).sort((a,b)=>String(a.createdAt).localeCompare(String(b.createdAt)));
@@ -515,14 +558,14 @@ async function markWa(id){const c=byId(S.customers,id);if(!c||c.waSentAt)return;
 async function custDetail(id){
   const c=byId(S.customers,id);if(!c)return;await names([...Object.values(c.redemptions||{}).map(r=>r.by),...(c.notes||[]).map(n=>n.by)]);
   const a=agreementOf(c);
-  modal('<h2>'+esc(c.name)+'</h2><p class="muted small"><span class="ltr">'+esc(localPhone(c.phone))+'</span> · '+esc(c.orgLabel||'')+' · سجّل '+fmtDT(c.createdAt)+'</p><div class="ticket"><div class="qrbox" id="qrC"></div><div class="code">'+esc(c.id)+'</div><div class="small muted">'+esc(a?a.name:'')+' · ينتهي '+fmtD(custEnd(c,a))+'</div></div><h3 style="margin-top:14px">الهدايا</h3>'+(c.gifts||[]).map(g=>{const r=(c.redemptions||{})[g.id];return '<div class="gift '+(r?'done':'')+'"><span class="nm">'+ic('gift')+''+esc(g.name)+'</span>'+(r?'<span class="small"><span class="pill p-ok">استلم</span><br><span class="muted">'+fmtDT(r.at)+(r.branch?' · '+esc(r.branch):'')+' · '+esc(nm(r.by))+(r.amount?' · شراء '+r.amount+' ر.س':'')+(r.note?' · '+esc(r.note):'')+'</span></span><button class="btn bad sm" data-undo="'+g.id+'">إلغاء التسليم</button>':(custStatus(c).r>=allowedOf(c)?'<span class="pill p-mut">—</span>':'<span class="pill p-warn">متاحة</span>'))+'</div>'}).join('')+'<p class="small muted">'+esc(giftsText(c))+'</p><div class="gift" style="background:#f7f9fd"><span class="nm">'+ic('store')+'فرع الاستلام</span><select id="cBr" style="width:auto"><option value="">أي فرع</option>'+branchList().map(b=>'<option '+(c.branch===b.name?'selected':'')+'>'+esc(b.name)+'</option>').join('')+'</select></div><div class="gift" style="background:#f7f9fd"><span class="nm">'+ic('key')+'رمز التسليم: <span class="code">'+esc((OF.pins&&OF.pins[c.id])||'—')+'</span><div class="small muted">يظهر لك أنت فقط. '+((+c.pinFails||0)>=PIN_MAX?'<b style="color:var(--bad)">مقفل بعد '+c.pinFails+' محاولات خاطئة</b>':(+c.pinFails?'محاولات خاطئة: '+c.pinFails:''))+'</div></span>'+((+c.pinFails||0)>0?'<button class="btn sec sm" id="pinUnlock">فتح القفل</button>':'')+'<button class="btn sec sm" id="pinNew">رمز جديد</button></div>'+((c.notes||[]).length?'<h3>ملاحظات الفريق</h3>'+(c.notes||[]).slice().reverse().map(n=>'<div class="small" style="padding:6px 0;border-top:1px solid var(--line)">'+ic('note')+''+esc(n.text)+' <span class="muted">– '+esc(nm(n.by))+(n.branch?' · '+esc(n.branch):'')+' · '+fmtDT(n.at)+'</span></div>').join(''):'')+'<div class="row" style="margin-top:12px"><a class="btn wa" target="_blank" rel="noopener" id="dwa" href="'+esc(waLink(c.phone,fillMsg(c)))+'">إرسال واتساب</a><button class="btn bad" id="delC">حذف العميل</button></div><p class="small muted">'+(c.waSentAt?'آخر إرسال واتساب: '+fmtDT(c.waSentAt):'لم يُرسل له واتساب بعد')+'</p>',(m,close)=>{
+  modal('<h2>'+esc(c.name)+'</h2><p class="muted small"><span class="ltr">'+esc(maskPhone(c.phone))+'</span> · '+esc(c.orgLabel||'')+' · سجّل '+fmtDT(c.createdAt)+'</p><div class="ticket"><div class="qrbox" id="qrC"></div><div class="code">'+esc(c.id)+'</div><div class="small muted">'+esc(a?a.name:'')+' · ينتهي '+fmtD(custEnd(c,a))+'</div></div><h3 style="margin-top:14px">الهدايا</h3>'+(c.gifts||[]).map(g=>{const r=(c.redemptions||{})[g.id];return '<div class="gift '+(r?'done':'')+'"><span class="nm">'+ic('gift')+''+esc(g.name)+'</span>'+(r?'<span class="small"><span class="pill p-ok">استلم</span><br><span class="muted">'+fmtDT(r.at)+(r.branch?' · '+esc(r.branch):'')+' · '+esc(nm(r.by))+(r.amount?' · شراء '+r.amount+' ر.س':'')+(r.note?' · '+esc(r.note):'')+'</span></span>'+(can('deliver.undo')?'<button class="btn bad sm" data-undo="'+g.id+'">إلغاء التسليم</button>':'')+'':(custStatus(c).r>=allowedOf(c)?'<span class="pill p-mut">—</span>':'<span class="pill p-warn">متاحة</span>'))+'</div>'}).join('')+'<p class="small muted">'+esc(giftsText(c))+'</p><div class="gift" style="background:#f7f9fd"><span class="nm">'+ic('store')+'فرع الاستلام</span><select id="cBr" style="width:auto" '+(canAny('customers.edit','deliver.move')?'':'disabled')+'><option value="">أي فرع</option>'+branchList().map(b=>'<option '+(c.branch===b.name?'selected':'')+'>'+esc(b.name)+'</option>').join('')+'</select></div><div class="gift" style="background:#f7f9fd"><span class="nm">'+ic('key')+'رمز التسليم: <span class="code">'+esc(can('pins.view')?((OF.pins&&OF.pins[c.id])||'—'):'••••')+'</span><div class="small muted">'+(can('pins.view')?'لا ترسله إلا لصاحب البطاقة. ':'')+((+c.pinFails||0)>=PIN_MAX?'<b style="color:var(--bad)">مقفل بعد '+c.pinFails+' محاولات خاطئة</b>':(+c.pinFails?'محاولات خاطئة: '+c.pinFails:''))+'</div></span>'+((+c.pinFails||0)>0&&can('pins.unlock')?'<button class="btn sec sm" id="pinUnlock">فتح القفل</button>':'')+(can('pins.reset')?'<button class="btn sec sm" id="pinNew">رمز جديد</button>':'')+'</div>'+((c.notes||[]).length?'<h3>ملاحظات الفريق</h3>'+(c.notes||[]).slice().reverse().map(n=>'<div class="small" style="padding:6px 0;border-top:1px solid var(--line)">'+ic('note')+''+esc(n.text)+' <span class="muted">– '+esc(nm(n.by))+(n.branch?' · '+esc(n.branch):'')+' · '+fmtDT(n.at)+'</span></div>').join(''):'')+'<div class="row" style="margin-top:12px">'+(can('customers.whatsapp')?'<a class="btn wa" target="_blank" rel="noopener" id="dwa" href="'+esc(waLink(c.phone,fillMsg(c)))+'">إرسال واتساب</a>':'')+(can('customers.delete')?'<button class="btn bad" id="delC">حذف العميل</button>':'')+'</div><p class="small muted">'+(c.waSentAt?'آخر إرسال واتساب: '+fmtDT(c.waSentAt):'لم يُرسل له واتساب بعد')+'</p>',(m,close)=>{
     drawQR($('#qrC',m),c.id,170);
-    $('#dwa',m).addEventListener('click',()=>markWa(c.id));
+    if($('#dwa',m))$('#dwa',m).addEventListener('click',()=>markWa(c.id));
     $$('[data-undo]',m).forEach(b=>b.onclick=async()=>{close();if(!(await confirmBox('إلغاء تسليم الهدية','ترجع الهدية لرصيد العميل ويقدر يستلمها مرة ثانية.','إلغاء التسليم','bad')))return;const red={...(c.redemptions||{})};delete red[b.dataset.undo];try{const dd=await db.collection('deliveries').where('customerId','==',c.id).get();for(const d of dd.docs){if(d.data().giftId===b.dataset.undo)await db.doc('deliveries/'+d.id).delete()}const snap=await db.doc('customers/'+c.id).get();const body={...snap.data(),redemptions:red};await db.doc('customers/'+c.id).set(body);toast('تم إلغاء التسليم')}catch(e){toast('تعذّر الإلغاء')}});
     $('#cBr',m).onchange=async e=>{const nb=e.target.value;try{const snap=await db.doc('customers/'+c.id).get();const cur=snap.data()||{};const notes=(cur.notes||[]).concat([{at:nowISO(),by:me||'',text:'تغيير فرع الاستلام إلى '+(nb||'أي فرع')+' (من الإدارة)',branch:''}]).slice(-50);await db.doc('customers/'+c.id).update({branch:nb,branchStrict:!!nb&&cur.branchStrict!==false,notes});toast('تم تغيير الفرع – أعد إرسال الرسالة لو تبي يوصله الرابط الجديد')}catch(x){toast('تعذّر')}};
     if($('#pinUnlock',m))$('#pinUnlock',m).onclick=async()=>{try{const r=await OF.sb.rpc('of_unlock',{p_code:c.id});if(r.error)throw r.error;OF.refresh();toast('تم فتح القفل');close()}catch(e){toast('تعذّر')}};
-    $('#pinNew',m).onclick=async()=>{close();if(!(await confirmBox('رمز تسليم جديد','يتغير الرمز ويُلغى القديم. لازم ترسل الرسالة للعميل مرة ثانية.','إنشاء رمز جديد')))return;try{const r=await OF.sb.rpc('of_new_pin',{p_code:c.id});if(r.error)throw r.error;OF.pins[c.id]=r.data;await db.doc('customers/'+c.id).update({waSentAt:null});toast('تم – أرسل له الواتساب من جديد')}catch(e){toast('تعذّر')}};
-    $('#delC',m).onclick=async()=>{close();if(!(await confirmBox('حذف العميل','يُحذف '+esc(c.name)+' وكوده نهائياً.','حذف','bad')))return;try{await db.doc('customers/'+c.id).delete();toast('تم الحذف')}catch(e){toast('تعذّر الحذف')}};
+    if($('#pinNew',m))$('#pinNew',m).onclick=async()=>{close();if(!(await confirmBox('رمز تسليم جديد','يتغير الرمز ويُلغى القديم. لازم ترسل الرسالة للعميل مرة ثانية.','إنشاء رمز جديد')))return;try{const r=await OF.sb.rpc('of_new_pin',{p_code:c.id});if(r.error)throw r.error;OF.pins[c.id]=r.data;await db.doc('customers/'+c.id).update({waSentAt:null});toast('تم – أرسل له الواتساب من جديد')}catch(e){toast('تعذّر')}};
+    if($('#delC',m))$('#delC',m).onclick=async()=>{close();if(!(await confirmBox('حذف العميل','يُحذف '+esc(c.name)+' وكوده نهائياً.','حذف','bad')))return;try{await db.doc('customers/'+c.id).delete();toast('تم الحذف')}catch(e){toast('تعذّر الحذف')}};
   });
 }
 async function saveFile(fn,data){if(dl){try{await dl.save({filename:fn,data});return true}catch(e){if(e&&e.code==='declined')return false;toast('تعذّر الحفظ: '+(e.code||''));return false}}toast('التنزيل غير متاح في هذا العرض');return false}
@@ -575,7 +618,7 @@ function aCampaigns(el){
   '<div id="cSum"></div></div><div><div class="card"><h3>معاينة الرسالة</h3><div id="cPrev" class="note" style="white-space:pre-wrap"></div></div><div class="card"><h3>الحملات السابقة</h3><div id="cHist"></div></div></div></div>';
   const list=()=>filterCustomers(d.filter);
   const upd=()=>{const L=list();d.msg=$('#cMsg',el).value;d.name=$('#cName',el).value;
-    $('#cSum',el).innerHTML='<div class="note" style="margin-bottom:10px">الشريحة: <b>'+L.length+' عميل</b></div><div class="row"><button class="btn" id="cXls" '+(L.length?'':'disabled')+'>'+ic('download')+'ملف الكول سنتر (Excel)</button><button class="btn wa" id="cQ" '+(L.length?'':'disabled')+'>إرسال متتابع</button></div><p class="small muted">الملف فيه: الجوال بصيغة 9665…، الاسم، والرسالة جاهزة لكل عميل – ارفعه في حملة جماعية على منصة هاتف من رقم 0577894369.</p>';
+    $('#cSum',el).innerHTML='<div class="note" style="margin-bottom:10px">الشريحة: <b>'+L.length+' عميل</b></div>'+(can('campaigns.send')?'':'<div class="small muted">عرض فقط – ما عندك صلاحية إرسال الحملات.</div>')+'<div class="row'+(can('campaigns.send')?'':' hide')+'"><button class="btn" id="cXls" '+(L.length?'':'disabled')+'>'+ic('download')+'ملف الكول سنتر (Excel)</button><button class="btn wa" id="cQ" '+(L.length?'':'disabled')+'>إرسال متتابع</button></div><p class="small muted">الملف فيه: الجوال بصيغة 9665…، الاسم، والرسالة جاهزة لكل عميل – ارفعه في حملة جماعية على منصة هاتف من رقم 0577894369.</p>';
     $('#cPrev',el).textContent=L[0]?fillCamp(d.msg,L[0]):fillCamp(d.msg,{name:'محمد',id:'ABC123',orgLabel:'مدرسة النور',gifts:[{name:'هدية'}],giftsAllowed:1});
     $('#cXls',el).onclick=()=>runCampaign('file',L);$('#cQ',el).onclick=()=>runCampaign('queue',L)};
   bindFilterBar(el,d.filter,()=>{$$('[data-pre]',el).forEach(b=>b.className='btn '+(d.filter.st===b.dataset.pre?'':'sec')+' sm');upd()});
@@ -607,8 +650,8 @@ function aTickets(el){
     '<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:12px 0"><div><div class="small muted">الرقم القديم</div><b class="ltr">'+esc(t.oldPhone?localPhone(t.oldPhone):(t.oldPhoneRaw||'غير معروف'))+'</b></div><div><div class="small muted">الرقم الجديد</div><b class="ltr" style="color:var(--ok)">'+esc(localPhone(t.newPhone))+'</b></div><div><div class="small muted">السبب</div><b>'+esc(TREASONS[t.reason]||t.reason)+'</b></div><div><div class="small muted">الجهة / الكود</div><b>'+esc(t.orgLabel||'—')+(t.code?' · <span class="code">'+esc(t.code)+'</span>':'')+'</b></div></div>'+
     (t.note?'<div class="small" style="margin-bottom:8px">'+ic('note')+''+esc(t.note)+'</div>':'')+
     '<div class="small muted">أنشأه '+esc(nm(t.by))+' · '+esc(t.branch||'')+' · '+fmtDT(t.createdAt)+(t.resolvedAt?' — '+(t.status==='approved'?'اعتمده':'رفضه')+' '+esc(nm(t.resolvedBy))+' '+fmtDT(t.resolvedAt):'')+(t.rejectReason?' · السبب: '+esc(t.rejectReason):'')+'</div>'+
-    (t.status==='open'?'<div class="row" style="margin-top:12px"><button class="btn ok" data-tapp="'+t.id+'">مراجعة واعتماد</button><button class="btn bad" data-trej="'+t.id+'">رفض</button></div>':'')+
-    (t.status==='approved'&&c?'<div class="row" style="margin-top:10px"><a class="btn wa sm" target="_blank" rel="noopener" data-tw="'+c.id+'" href="'+esc(waLink(c.phone,fillMsg(c)))+'">إرسال الكود والرمز للرقم الجديد</a>'+(c.waSentAt?'<span class="small muted">'+ic('check')+'أُرسل</span>':'')+'</div>':'')+'</div>'}).join(''):'<div class="card empty">ما فيه طلبات هنا.</div>');
+    (t.status==='open'&&canAny('tickets.approve','tickets.reject')?'<div class="row" style="margin-top:12px">'+(can('tickets.approve')?'<button class="btn ok" data-tapp="'+t.id+'">مراجعة واعتماد</button>':'')+(can('tickets.reject')?'<button class="btn bad" data-trej="'+t.id+'">رفض</button>':'')+'</div>':'')+
+    (t.status==='approved'&&c&&canAny('customers.whatsapp','tickets.approve')?'<div class="row" style="margin-top:10px"><a class="btn wa sm" target="_blank" rel="noopener" data-tw="'+c.id+'" href="'+esc(waLink(c.phone,fillMsg(c)))+'">إرسال الكود والرمز للرقم الجديد</a>'+(c.waSentAt?'<span class="small muted">'+ic('check')+'أُرسل</span>':'')+'</div>':'')+'</div>'}).join(''):'<div class="card empty">ما فيه طلبات هنا.</div>');
   $$('[data-tf]',el).forEach(b=>b.onclick=()=>{tFilter=b.dataset.tf;aTickets(el)});
   $$('[data-tw]',el).forEach(a=>a.addEventListener('click',()=>markWa(a.dataset.tw)));
   $$('[data-trej]',el).forEach(b=>b.onclick=()=>{const t=byId(S.tickets,b.dataset.trej);modal('<h2>رفض الطلب</h2><label class="f"><span>سبب الرفض</span><input type="text" id="rj" placeholder="مثال: البيانات غير مطابقة"></label><button class="btn bad" id="rjOk">رفض الطلب</button>',(m,close)=>{$('#rjOk',m).onclick=async()=>{try{await db.doc('tickets/'+t.id).update({status:'rejected',rejectReason:$('#rj',m).value.trim(),resolvedAt:nowISO(),resolvedBy:me||''});close();toast('تم رفض الطلب')}catch(e){toast('تعذّر')}}})});
@@ -638,7 +681,8 @@ let setSec='staff';
 function aSettings(el){
   const reqN=(S.staffReqs||[]).filter(r=>r.status==='pending').length;
   const secs=[['staff',''+ic('users')+'الموظفين والصلاحيات'+(reqN?' ('+reqN+')':'')],['branches',''+ic('store')+'الفروع'],['rules',''+ic('shield')+'أحكام منع الهدر'],['general',''+ic('gear')+'عام']];
-  el.innerHTML='<div class="row" style="margin-bottom:14px">'+secs.map(x=>'<button class="btn '+(setSec===x[0]?'':'sec')+'" data-sec="'+x[0]+'">'+x[1]+'</button>').join('')+'</div><div id="secBody"></div>';
+  const allowS={staff:can('staff.view'),branches:can('branches.view'),rules:can('settings.view'),general:can('settings.view')};const secsA=secs.filter(x=>allowS[x[0]]);if(!secsA.some(x=>x[0]===setSec))setSec=(secsA[0]||['staff'])[0];
+  el.innerHTML='<div class="row" style="margin-bottom:14px">'+secsA.map(x=>'<button class="btn '+(setSec===x[0]?'':'sec')+'" data-sec="'+x[0]+'">'+x[1]+'</button>').join('')+'</div><div id="secBody"></div>';
   $$('[data-sec]',el).forEach(b=>b.onclick=()=>{setSec=b.dataset.sec;aSettings(el)});
   ({staff:sStaff,branches:sBranches,rules:sRules,general:sGeneral})[setSec]($('#secBody',el));
 }
@@ -647,17 +691,18 @@ async function saveSettings(patch){await db.doc('settings/main').set({...S.setti
 function sBranches(el){
   let bl=branchList().map(b=>({...b}));
   const staffIn=n=>(S.staff||[]).filter(s=>(s.branches||[]).includes(n)).length;
+  const cE=can('branches.edit'),cA=can('branches.add'),cD=can('branches.delete'),dis=cE?'':' disabled';
   const draw=()=>{el.innerHTML='<div class="card" style="max-width:820px" data-keep><h2>'+ic('store')+'الفروع</h2><p class="small muted">الفروع تظهر للموظف عند التسليم، ويُربط فيها كل موظف. رابط الخريطة ورقم الفرع ينفعون في رسائل العملاء.</p>'+
-    (bl.length?bl.map((b,i)=>'<div class="gift" style="flex-wrap:wrap;align-items:flex-end"><label class="f" style="flex:2;min-width:150px;margin:0"><span>اسم الفرع</span><input type="text" data-bn="'+i+'" value="'+esc(b.name)+'"></label><label class="f" style="flex:1;min-width:130px;margin:0"><span>جوال الفرع</span><input type="tel" data-bp="'+i+'" value="'+esc(b.phone||'')+'" style="direction:ltr;text-align:right"></label><label class="f" style="flex:2;min-width:160px;margin:0"><span>العنوان</span><input type="text" data-ba="'+i+'" value="'+esc(b.address||'')+'"></label><label class="f" style="flex:2;min-width:160px;margin:0"><span>رابط الموقع (قوقل ماب)</span><input type="text" data-bm="'+i+'" value="'+esc(b.map||'')+'" style="direction:ltr"></label><div class="small muted" style="min-width:70px">'+staffIn(b.name)+' موظف</div><button class="btn bad sm" data-bdel="'+i+'">حذف</button></div>').join(''):'<div class="empty">ما فيه فروع.</div>')+
-    '<div class="row" style="margin:12px 0"><input type="text" id="bNew" placeholder="اسم الفرع الجديد (مثال: فرع خميس مشيط)" style="flex:1"><button class="btn sec" id="bAdd">+ إضافة فرع</button></div><button class="btn" id="bSave">حفظ الفروع</button></div>';
+    (bl.length?bl.map((b,i)=>'<div class="gift" style="flex-wrap:wrap;align-items:flex-end"><label class="f" style="flex:2;min-width:150px;margin:0"><span>اسم الفرع</span><input type="text" data-bn="'+i+'" value="'+esc(b.name)+'"'+dis+'></label><label class="f" style="flex:1;min-width:130px;margin:0"><span>جوال الفرع</span><input type="tel" data-bp="'+i+'" value="'+esc(b.phone||'')+'" style="direction:ltr;text-align:right"'+dis+'></label><label class="f" style="flex:2;min-width:160px;margin:0"><span>العنوان</span><input type="text" data-ba="'+i+'" value="'+esc(b.address||'')+'"'+dis+'></label><label class="f" style="flex:2;min-width:160px;margin:0"><span>رابط الموقع (قوقل ماب)</span><input type="text" data-bm="'+i+'" value="'+esc(b.map||'')+'" style="direction:ltr"'+dis+'></label><div class="small muted" style="min-width:70px">'+staffIn(b.name)+' موظف</div>'+(cD?'<button class="btn bad sm" data-bdel="'+i+'">حذف</button>':'')+'</div>').join(''):'<div class="empty">ما فيه فروع.</div>')+
+    (cA?'<div class="row" style="margin:12px 0"><input type="text" id="bNew" placeholder="اسم الفرع الجديد (مثال: فرع خميس مشيط)" style="flex:1"><button class="btn sec" id="bAdd">+ إضافة فرع</button></div>':'')+(cA||cE||cD?'<button class="btn" id="bSave">حفظ الفروع</button>':'<div class="small muted">عرض فقط.</div>')+'</div>';
     $$('[data-bn]',el).forEach(x=>x.oninput=()=>bl[+x.dataset.bn].name=x.value);
     $$('[data-bp]',el).forEach(x=>x.oninput=()=>bl[+x.dataset.bp].phone=x.value);
     $$('[data-bm]',el).forEach(x=>x.oninput=()=>bl[+x.dataset.bm].map=x.value);
     $$('[data-ba]',el).forEach(x=>x.oninput=()=>bl[+x.dataset.ba].address=x.value);
     $$('[data-bdel]',el).forEach(b=>b.onclick=async()=>{const br=bl[+b.dataset.bdel];const n=staffIn(br.name);if(!(await confirmBox('حذف '+br.name,(n?'فيه '+n+' موظف مربوطين بهذا الفرع وبينشالون منه. ':'')+'سجل التسليمات القديم يبقى كما هو. لازم تضغط «حفظ الفروع» بعدها.','حذف','bad')))return;bl.splice(+b.dataset.bdel,1);draw()});
     const add=()=>{const v=$('#bNew',el).value.trim();if(!v)return;if(bl.some(x=>x.name===v)){toast('الفرع موجود');return}bl.push({id:'b'+rid(5),name:v,phone:'',map:''});draw();$('#bNew',el).focus()};
-    $('#bAdd',el).onclick=add;$('#bNew',el).onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();add()}};
-    $('#bSave',el).onclick=async()=>{const clean=bl.map(b=>({...b,name:b.name.trim()})).filter(b=>b.name);if(!clean.length){toast('لازم فرع واحد على الأقل');return}
+    if(cA){$('#bAdd',el).onclick=add;$('#bNew',el).onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();add()}}}
+    if($('#bSave',el))$('#bSave',el).onclick=async()=>{const clean=bl.map(b=>({...b,name:b.name.trim()})).filter(b=>b.name);if(!clean.length){toast('لازم فرع واحد على الأقل');return}
       const old=branchList();const ren={};old.forEach(o=>{const nw=clean.find(x=>x.id===o.id);if(nw&&nw.name!==o.name)ren[o.name]=nw.name});const alive=new Set(clean.map(b=>b.name));
       try{await saveSettings({branchList:clean,branches:clean.map(b=>b.name)});
         for(const s of (S.staff||[])){const nb=(s.branches||[]).map(n=>ren[n]||n).filter(n=>alive.has(n));if(JSON.stringify(nb)!==JSON.stringify(s.branches||[]))await db.doc('staff/'+s.id).update({branches:nb})}
@@ -670,11 +715,11 @@ function sStaff(el){
   const st=(S.staff||[]).slice().sort((a,b)=>(a.active===false)-(b.active===false)||String(a.name).localeCompare(String(b.name)));
   const today=dayKey();const dCount=id=>S.deliveries.filter(d=>d.by===id).length;const dToday=id=>S.deliveries.filter(d=>d.by===id&&d.day===today).length;
   const staffLink=(S.settings.baseUrl||'').replace(/#.*$/,'')+'#staff';
-  el.innerHTML=(reqs.length?'<div class="card" style="border-color:#f3d9b1;background:#fffaf2"><h2>'+ic('clock')+'طلبات انضمام ('+reqs.length+')</h2>'+reqs.map(r=>'<div class="gift"><span class="nm">'+esc(r.name)+'<div class="small muted">'+esc(r.branch||'')+(r.phone?' · <span class="ltr">'+esc(localPhone(r.phone))+'</span>':'')+' · '+fmtDT(r.at)+'</div></span><button class="btn ok sm" data-racc="'+r.id+'">قبول وتحديد الصلاحيات</button><button class="btn bad sm" data-rrej="'+r.id+'">رفض</button></div>').join('')+'</div>':'')+
+  el.innerHTML=(reqs.length?'<div class="card" style="border-color:#f3d9b1;background:#fffaf2"><h2>'+ic('clock')+'طلبات انضمام ('+reqs.length+')</h2>'+reqs.map(r=>'<div class="gift"><span class="nm">'+esc(r.name)+'<div class="small muted">'+esc(r.branch||'')+(r.phone?' · <span class="ltr">'+esc(localPhone(r.phone))+'</span>':'')+' · '+fmtDT(r.at)+'</div></span>'+(can('staff.add')?'<button class="btn ok sm" data-racc="'+r.id+'">قبول وتحديد الصلاحيات</button><button class="btn bad sm" data-rrej="'+r.id+'">رفض</button>':'')+'</div>').join('')+'</div>':'')+
   '<div class="card"><div class="row" style="justify-content:space-between"><h2 style="margin:0">'+ic('users')+'الموظفين ('+st.filter(s=>s.active!==false).length+' فعّال)</h2></div>'+
-  (st.length?'<div class="scroll" style="margin-top:12px"><table class="tbl"><thead><tr><th>الموظف</th><th>الدور</th><th>الفروع</th><th>الصلاحيات</th><th>تسليمات اليوم / الكل</th><th>الحالة</th><th></th></tr></thead><tbody>'+st.map(s=>'<tr><td><b>'+esc(s.name)+'</b>'+(s.phone?'<div class="small muted ltr">'+esc(localPhone(s.phone))+'</div>':'')+'</td><td><span class="pill '+({manager:'p-s2',supervisor:'p-s1',staff:'p-s3'}[s.role]||'p-mut')+'">'+(ROLES[s.role]||s.role)+'</span></td><td class="small">'+((s.branches||[]).length?esc(s.branches.join('، ')):'كل الفروع')+'</td><td class="small muted">'+PERMS.filter(p=>(s.perms||{})[p[0]]).map(p=>p[1]).join('، ')+'</td><td>'+dToday(s.id)+' / '+dCount(s.id)+'</td><td>'+(s.active===false?'<span class="pill p-bad">موقوف</span>':'<span class="pill p-ok">فعّال</span>')+'</td><td class="row" style="flex-wrap:nowrap"><button class="btn sec sm" data-sed="'+s.id+'">تعديل</button><button class="btn sec sm" data-stg="'+s.id+'">'+(s.active===false?'تفعيل':'إيقاف')+'</button><button class="btn bad sm" data-sdel="'+s.id+'">حذف</button></td></tr>').join('')+'</tbody></table></div>':'<div class="empty">ما فيه موظفين بعد.</div>')+'</div>'+
+  (st.length?'<div class="scroll" style="margin-top:12px"><table class="tbl"><thead><tr><th>الموظف</th><th>الدور</th><th>الفروع</th><th>الصلاحيات</th><th>تسليمات اليوم / الكل</th><th>الحالة</th><th></th></tr></thead><tbody>'+st.map(s=>'<tr><td><b>'+esc(s.name)+'</b>'+(s.phone?'<div class="small muted ltr">'+esc(localPhone(s.phone))+'</div>':'')+'</td><td><span class="pill '+({manager:'p-s2',supervisor:'p-s1',staff:'p-s3'}[s.role]||'p-mut')+'">'+(ROLES[s.role]||s.role)+'</span></td><td class="small">'+((s.branches||[]).length?esc(s.branches.join('، ')):'كل الفروع')+'</td><td class="small muted">'+permSummary(s.perms)+'</td><td>'+dToday(s.id)+' / '+dCount(s.id)+'</td><td>'+(s.active===false?'<span class="pill p-bad">موقوف</span>':'<span class="pill p-ok">فعّال</span>')+'</td><td class="row" style="flex-wrap:nowrap">'+(s.id===me?'<span class="small muted">حسابك</span>':(can('staff.edit')?'<button class="btn sec sm" data-sed="'+s.id+'">الصلاحيات</button><button class="btn sec sm" data-stg="'+s.id+'">'+(s.active===false?'تفعيل':'إيقاف')+'</button>':'')+(can('staff.delete')?'<button class="btn bad sm" data-sdel="'+s.id+'">حذف</button>':''))+'</td></tr>').join('')+'</tbody></table></div>':'<div class="empty">ما فيه موظفين بعد.</div>')+'</div>'+
   '<div class="card"><h2>كيف أضيف موظف؟</h2><div class="note">1) أرسل للموظف رابط الموظفين (تحت).<br>2) يسوي حساب بإيميله وكلمة مرور، ويأكد بريده، ثم يسجّل دخول ويرسل <b>طلب انضمام</b> يظهر لك فوق.<br>3) اضغط «قبول» وحدد دوره وفرعه وصلاحياته.<br><br><b>الإيقاف أو الحذف:</b> ينقفل عليه النظام فوراً حتى لو كان عنده حساب.</div><div class="row" style="margin-top:10px"><input type="text" readonly value="'+esc(staffLink)+'" style="direction:ltr;flex:1"><button class="btn sec" id="cpStaff">نسخ رابط الموظفين</button></div></div>'+
-  '<div class="card"><h3>الأدوار</h3><div class="small" style="line-height:1.9"><b>موظف فرع:</b> استعلام، تسليم، ملاحظات، إنشاء طلبات تعديل رقم. الجوال يظهر له مخفي.<br><b>مشرف:</b> + رؤية الجوال كامل والتواصل، واعتماد طلبات تعديل الرقم.<br><b>مدير:</b> + لوحة التحكم (الرئيسية، العملاء، الحملات، الطلبات). الإعدادات والجهات والاتفاقيات لك أنت فقط.<br>تقدر تعدّل صلاحيات أي موظف يدوياً.</div></div>';
+  '<div class="card"><h3>الأدوار الجاهزة</h3><div class="small" style="line-height:1.9"><b>موظف فرع:</b> استعلام، تسليم، ملاحظات، إنشاء طلب تعديل رقم. الجوال يظهر له مخفي.<br><b>مشرف:</b> + الجوال كامل، نقل الفرع، إلغاء التسليم، اعتماد ورفض الطلبات، عرض رمز التسليم وفتح القفل.<br><b>مدير فرع:</b> + الرئيسية، العملاء (عرض وتصدير وواتساب)، الحملات، رمز جديد، وعرض الجهات والاتفاقيات والموظفين والفروع.<br><b>مدير عام:</b> كل الصلاحيات.<br>بعد اختيار الدور تقدر تشيل أو تضيف أي صلاحية من الجدول، ويصير الدور «مخصص».<br><br><b>حماية:</b> ما أحد يقدر يعدّل صلاحياته بنفسه، ولا يعطي غيره صلاحية ما يملكها هو، والسيرفر يرفض أي عملية بدون صلاحية حتى لو تجاوز أحد الواجهة.</div></div>';
   $('#cpStaff',el).onclick=()=>copy(staffLink);
   
   $$('[data-racc]',el).forEach(b=>b.onclick=()=>{const r=byId(S.staffReqs,b.dataset.racc);staffEdit(r.id,{name:r.name,phone:r.phone||'',branches:r.branch?[r.branch]:[],role:'staff'},true)});
@@ -691,21 +736,39 @@ function addStaffDialog(){
         $$('[data-pick]',r).forEach(b=>b.onclick=()=>{close();staffEdit(b.dataset.pick,{name:b.dataset.nm,role:'staff',branches:[]},false,true)})}catch(e){r.innerHTML='<div class="small muted">تعذّر البحث.</div>'}};
     q.addEventListener('focus',run,{once:true});q.oninput=()=>{clearTimeout(q._t);q._t=setTimeout(run,250)};setTimeout(()=>q.focus(),60)});
 }
+function permSummary(p){const P=normPerms(p);const n=ALL_PERMS.filter(k=>P[k]).length;if(!n)return 'بدون صلاحيات';if(n===ALL_PERMS.length)return 'كل الصلاحيات';const secs=PERM_ROWS.filter(r=>rowKeys(r).some(k=>P[k])).map(r=>r.t.split(' (')[0]);return n+' صلاحية · '+secs.join('، ')}
 function staffEdit(id,s,fromReq,isNew){
-  const perms={...(s.perms||ROLE_PERMS[s.role||'staff'])};let role=s.role||'staff';
-  modal('<h2>'+(fromReq?'قبول موظف':isNew?'إضافة موظف':'تعديل موظف')+'</h2><form id="sef">'+
-  '<label class="f"><span>الاسم</span><input type="text" name="name" value="'+esc(s.name||'')+'" required></label>'+
-  '<label class="f"><span>الجوال (اختياري)</span><input type="tel" name="phone" value="'+esc(s.phone?localPhone(s.phone):'')+'" style="direction:ltr;text-align:right"></label>'+
-  '<label class="f"><span>الدور</span><select name="role">'+Object.entries(ROLES).map(([k,v])=>'<option value="'+k+'" '+(k===role?'selected':'')+'>'+v+'</option>').join('')+'</select></label>'+
-  '<div class="f"><span class="small muted" style="display:block;margin-bottom:4px">الفروع (بدون تحديد = كل الفروع)</span>'+branchList().map(b=>'<label class="chk" style="margin:4px 0"><input type="checkbox" name="br" value="'+esc(b.name)+'" '+((s.branches||[]).includes(b.name)?'checked':'')+'> '+esc(b.name)+'</label>').join('')+'</div>'+
-  '<div class="f"><span class="small muted" style="display:block;margin-bottom:4px">الصلاحيات</span><div id="permBox"></div></div>'+
+  const perms=s.perms?normPerms(s.perms):{...ROLE_PERMS[s.role||'staff']};let role=s.role||'staff';
+  modal('<h2>'+(fromReq?'قبول موظف':isNew?'إضافة موظف':'صلاحيات '+esc(s.name||''))+'</h2><form id="sef">'+
+  '<div class="grid two"><label class="f"><span>الاسم</span><input type="text" name="name" value="'+esc(s.name||'')+'" required></label>'+
+  '<label class="f"><span>الجوال (اختياري)</span><input type="tel" name="phone" value="'+esc(s.phone?localPhone(s.phone):'')+'" style="direction:ltr;text-align:right"></label></div>'+
+  '<label class="f"><span>الدور (يعبّي الجدول تلقائياً)</span><select name="role">'+Object.entries(ROLES).map(([k,v])=>'<option value="'+k+'" '+(k===role?'selected':'')+'>'+v+'</option>').join('')+'</select></label>'+
+  '<div class="f"><span class="small muted" style="display:block;margin-bottom:4px">الفروع (بدون تحديد = كل الفروع)</span><div class="row">'+branchList().map(b=>'<label class="chk" style="margin:2px 0"><input type="checkbox" name="br" value="'+esc(b.name)+'" '+((s.branches||[]).includes(b.name)?'checked':'')+'> '+esc(b.name)+'</label>').join('')+'</div></div>'+
+  '<div class="f"><div class="row" style="justify-content:space-between;margin-bottom:6px"><b>الصلاحيات</b><span class="row"><button type="button" class="btn sec sm" id="pAll">تحديد الكل</button><button type="button" class="btn sec sm" id="pNone">إلغاء الكل</button></span></div><div id="permBox" class="scroll"></div></div>'+
   '<label class="chk"><input type="checkbox" name="active" '+(s.active===false?'':'checked')+'> الحساب فعّال</label>'+
   '<button class="btn big ok" type="submit">حفظ</button></form>',(m,close)=>{
+    const box=m.querySelector('.modal')||m.firstElementChild;if(box)box.style.maxWidth='900px';
     const f=$('#sef',m);
-    const drawP=()=>{$('#permBox',m).innerHTML=PERMS.map(p=>'<label class="chk" style="margin:4px 0"><input type="checkbox" data-perm="'+p[0]+'" '+(perms[p[0]]?'checked':'')+'> '+p[1]+'</label>').join('');$$('[data-perm]',m).forEach(x=>x.onchange=()=>{perms[x.dataset.perm]=x.checked?1:0})};
-    drawP();f.role.onchange=()=>{role=f.role.value;Object.keys(perms).forEach(k=>delete perms[k]);Object.assign(perms,ROLE_PERMS[role]);drawP()};
-    f.onsubmit=async e=>{e.preventDefault();const body={name:f.name.value.trim(),phone:normPhone(f.phone.value)||'',role:f.role.value,branches:$$('input[name=br]:checked',m).map(x=>x.value),perms:Object.fromEntries(Object.entries(perms).filter(([k,v])=>v).map(([k])=>[k,1])),active:f.active.checked,updatedAt:nowISO()};
-      try{const ex=byId(S.staff||[],id);await db.doc('staff/'+id).set({...(ex||{}),...body,createdAt:(ex&&ex.createdAt)||nowISO()});delete body.id;if(fromReq){try{await db.doc('staffRequests/'+id).update({status:'approved'})}catch(x){}}close();toast('تم الحفظ')}catch(x){toast('ما تم الحفظ')}};
+    const mine=k=>can(k);
+    const cell=x=>{if(!x)return '<td class="pc"><span class="muted">—</span></td>';return '<td class="pc"><label title="'+esc(PERM_LABEL[x[0]]||'')+'"><input type="checkbox" data-perm="'+x[0]+'" '+(perms[x[0]]?'checked':'')+(mine(x[0])?'':' disabled')+'>'+(x[1]?'<span class="small muted" style="display:block">'+esc(x[1])+'</span>':'')+'</label></td>'};
+    const setK=(k,v)=>{if(!mine(k))return;if(v)perms[k]=1;else delete perms[k]};
+    const fixView=()=>PERM_ROWS.forEach(r=>{const keys=rowKeys(r).filter(k=>!r.v||k!==r.v[0]);if(r.v&&keys.some(k=>perms[k]))setK(r.v[0],1)});
+    const custom=()=>{role='custom';f.role.value='custom'};
+    const drawP=()=>{
+      $('#permBox',m).innerHTML='<table class="tbl ptbl"><thead><tr><th>القسم</th>'+PERM_COLS.map(c=>'<th class="pc"><a href="#" data-colall="'+c[0]+'" title="تحديد/إلغاء العمود كامل">'+c[1]+'</a></th>').join('')+'<th>صلاحيات خاصة</th><th class="pc">الكل</th></tr></thead><tbody>'+
+      PERM_ROWS.map((r,i)=>{const allOn=rowKeys(r).every(k=>perms[k]);
+        return '<tr><td><b>'+esc(r.t)+'</b></td>'+PERM_COLS.map(c=>cell(r[c[0]])).join('')+'<td>'+((r.x||[]).map(x=>'<label class="chk" style="margin:2px 0;white-space:nowrap"><input type="checkbox" data-perm="'+x[0]+'" '+(perms[x[0]]?'checked':'')+(mine(x[0])?'':' disabled')+'> '+esc(x[1])+'</label>').join('')||'<span class="muted">—</span>')+'</td><td class="pc"><input type="checkbox" data-rowall="'+i+'" '+(allOn?'checked':'')+'></td></tr>'}).join('')+'</tbody></table>'+
+      '<p class="small muted" style="margin-top:6px">أي صلاحية إضافة أو تعديل أو حذف تفعّل «عرض» نفس القسم تلقائياً. اضغط على اسم العمود لتحديده كامل.'+(isOwner?'':' الصلاحيات الرمادية ما تملكها أنت فما تقدر تعطيها.')+'</p>';
+      $$('[data-perm]',m).forEach(x=>x.onchange=()=>{setK(x.dataset.perm,x.checked);fixView();custom();drawP()});
+      $$('[data-rowall]',m).forEach(x=>x.onchange=()=>{rowKeys(PERM_ROWS[+x.dataset.rowall]).forEach(k=>setK(k,x.checked));custom();drawP()});
+      $$('[data-colall]',m).forEach(a=>a.onclick=e=>{e.preventDefault();const col=a.dataset.colall;const ks=PERM_ROWS.map(r=>r[col]).filter(Boolean).map(x=>x[0]);const on=!ks.filter(mine).every(k=>perms[k]);ks.forEach(k=>setK(k,on));fixView();custom();drawP()});
+    };
+    drawP();
+    $('#pAll',m).onclick=()=>{ALL_PERMS.forEach(k=>setK(k,1));custom();drawP()};
+    $('#pNone',m).onclick=()=>{Object.keys(perms).forEach(k=>delete perms[k]);custom();drawP()};
+    f.role.onchange=()=>{role=f.role.value;if(role==='custom')return;Object.keys(perms).forEach(k=>delete perms[k]);Object.keys(ROLE_PERMS[role]).forEach(k=>setK(k,1));drawP()};
+    f.onsubmit=async e=>{e.preventDefault();const body={name:f.name.value.trim(),phone:normPhone(f.phone.value)||'',role:f.role.value,branches:$$('input[name=br]:checked',m).map(x=>x.value),perms:Object.fromEntries(ALL_PERMS.filter(k=>perms[k]).map(k=>[k,1])),active:f.active.checked,updatedAt:nowISO()};
+      try{const ex=byId(S.staff||[],id);await db.doc('staff/'+id).set({...(ex||{}),...body,createdAt:(ex&&ex.createdAt)||nowISO()});if(fromReq){try{await db.doc('staffRequests/'+id).update({status:'approved'})}catch(x){}}close();toast('تم الحفظ')}catch(x){toast('ما تم الحفظ – تأكد إن عندك الصلاحية')}};
   });
 }
 // rules & general
@@ -716,9 +779,9 @@ function sRules(el){
   '<div class="grid two"><label class="f"><span>سقف التسليم اليومي لكل فرع (فاضي = مفتوح)</span><input type="text" name="capBranch" inputmode="numeric" value="'+esc(s.capBranch||'')+'"></label><label class="f"><span>سقف التسليم اليومي لكل موظف (فاضي = مفتوح)</span><input type="text" name="capStaff" inputmode="numeric" value="'+esc(s.capStaff||'')+'"></label></div>'+
   '<label class="f"><span>جوال صاحب صلاحية تعديل الأرقام (يوصله تنبيه الطلبات على واتساب)</span><input type="tel" name="approverPhone" value="'+esc(localPhone(s.approverPhone||''))+'" placeholder="05xxxxxxxx" style="direction:ltr;text-align:right"></label>'+
   '<p class="small muted">مخزون كل هدية وصلاحية العميل بالأيام تضبطها من «الاتفاقيات والهدايا». القائمة المعتمدة من «الجهات والروابط». رمز التسليم يُقفل بعد 5 محاولات خاطئة.</p>'+
-  '<button class="btn" type="submit">حفظ</button></form>';
+  (can('settings.edit')?'<button class="btn" type="submit">حفظ</button>':'<div class="small muted">عرض فقط.</div>')+'</form>';
   const f=$('#sf',el);
-  f.onsubmit=async e=>{e.preventDefault();try{await saveSettings({onePhone:f.onePhone.checked,capBranch:parseInt(toLatin(f.capBranch.value),10)||0,capStaff:parseInt(toLatin(f.capStaff.value),10)||0,approverPhone:normPhone(f.approverPhone.value)||''});toast('تم الحفظ');document.activeElement&&document.activeElement.blur()}catch(err){toast('ما تم الحفظ')}};
+  f.onsubmit=async e=>{e.preventDefault();if(!can('settings.edit'))return;try{await saveSettings({onePhone:f.onePhone.checked,capBranch:parseInt(toLatin(f.capBranch.value),10)||0,capStaff:parseInt(toLatin(f.capStaff.value),10)||0,approverPhone:normPhone(f.approverPhone.value)||''});toast('تم الحفظ');document.activeElement&&document.activeElement.blur()}catch(err){toast('ما تم الحفظ')}};
 }
 function sGeneral(el){
   const s=S.settings;
@@ -729,11 +792,11 @@ function sGeneral(el){
   '<label class="f"><span>الرابط</span><input type="text" name="servicesUrl" style="direction:ltr" value="'+esc(s.servicesUrl||'https://blhtm.com')+'"></label>'+
   '<label class="f"><span>نص الخدمات</span><input type="text" name="servicesText" value="'+esc(s.servicesText||DEFAULT_SVC)+'"></label>'+
   '<div class="note small" style="margin-bottom:10px;white-space:pre-wrap" id="svcPrev"></div>'+
-  '<button class="btn" type="submit">حفظ</button></form>'+
+  (can('settings.edit')?'<button class="btn" type="submit">حفظ</button>':'<div class="small muted">عرض فقط.</div>')+'</form>'+
   '<div class="card" style="max-width:640px"><h2>التحويل للنسخة النهائية</h2><div class="note">• الإرسال التلقائي: يُربط بمنصة هاتف ويرسل من 0577894369 فور التسجيل، باسم «بصمة الاهتمام للاتصالات».<br>• رابط التسجيل: يُنقل إلى blhtm2.com عشان يقدر أي طالب أو موظف جهة يسجّل بدون حساب.<br>• رمز التسليم والصلاحيات تُفحص من السيرفر.<br>• البيانات هنا تنصدّر Excel وتنقل كما هي.</div></div>';
   const f=$('#sf',el);
   const sp=()=>{$('#svcPrev',el).textContent=f.svcOn.checked?'شكل السطر في الرسالة:\nتعرّف على خدماتنا: '+f.servicesText.value+'\n'+f.servicesUrl.value:'(لن يُضاف الرابط للرسائل)'};sp();f.servicesText.oninput=sp;f.servicesUrl.oninput=sp;f.svcOn.onchange=sp;
-  f.onsubmit=async e=>{e.preventDefault();try{await saveSettings({baseUrl:f.baseUrl.value.trim(),servicesUrl:f.servicesUrl.value.trim()||'https://blhtm.com',servicesText:f.servicesText.value.trim()||DEFAULT_SVC,servicesOff:!f.svcOn.checked});toast('تم الحفظ');document.activeElement&&document.activeElement.blur()}catch(err){toast('ما تم الحفظ')}};
+  f.onsubmit=async e=>{e.preventDefault();if(!can('settings.edit'))return;try{await saveSettings({baseUrl:f.baseUrl.value.trim(),servicesUrl:f.servicesUrl.value.trim()||'https://blhtm.com',servicesText:f.servicesText.value.trim()||DEFAULT_SVC,servicesOff:!f.svcOn.checked});toast('تم الحفظ');document.activeElement&&document.activeElement.blur()}catch(err){toast('ما تم الحفظ')}};
 }
 // join screen for unregistered staff
 async function renderJoin(){
@@ -755,6 +818,7 @@ const recentKey='bs_recent';
 function recentGet(){try{return JSON.parse(lsGet(recentKey)||'[]')}catch(e){return []}}
 function recentAdd(c){const r=recentGet().filter(x=>x.id!==c.id);r.unshift({id:c.id,name:c.name,org:c.orgLabel||''});lsSet(recentKey,JSON.stringify(r.slice(0,6)))}
 async function renderStaff(){
+  if(!can('deliver.view')){$('#app').innerHTML=shell('staff','<div class="reg" style="margin-top:20px"><div class="card empty">ما عندك صلاحية واجهة التسليم. راجع المدير.</div></div>');return}
   try{const s=await db.doc('settings/main').get();if(s.exists)S.settings=s.data()}catch(e){}
   try{const ss=await db.collection('staff').get();S.staff=ss.docs.map(d=>({id:d.id,...d.data()}))}catch(e){}
   const branches=myBranches();
@@ -766,7 +830,7 @@ async function renderStaff(){
   $$('[data-mode]').forEach(b=>b.onclick=()=>{sMode=b.dataset.mode;lsSet('bs_smode',sMode);$$('[data-mode]').forEach(x=>x.classList.toggle('on',x===b));drawMode()});
   $('#qrfile').onchange=async e=>{const file=e.target.files&&e.target.files[0];if(!file)return;$('#sres').innerHTML='<div class="card empty">جاري قراءة الـ QR…</div>';const txt=await decodeQR(file);if(!txt){$('#sres').innerHTML='<div class="card empty">ما قدرت أقرأ الـ QR. قرّب الكاميرا وخلّ الكود واضح، أو ابحث برقم العميل.</div>';return}staffSearch(txt)};
   drawMode();drawRecent();drawToday();drawMyTickets();
-  if(!can('tickets'))$('#newTicket').closest('.card').classList.add('hide');
+  if(!can('tickets.add'))$('#newTicket').closest('.card').classList.add('hide');
   $('#newTicket').onclick=()=>ticketForm({});
   if(staffCurrent)showCustomer(staffCurrent);
 }
@@ -830,18 +894,18 @@ function drawStaffCard(c,a,o){
   const canAll=avail.length>0&&avail.length<=remain;
   res.innerHTML='<div class="card"><div class="row" style="justify-content:space-between;align-items:flex-start"><div><h2 style="margin:0">'+esc(c.name)+'</h2><div class="muted small" style="margin-top:4px">رقم العميل <span class="code">'+esc(c.id)+'</span></div></div><span class="pill '+s.cls+'" style="font-size:14px">'+s.t+'</span></div>'+
   '<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr));margin:14px 0;gap:10px">'+info('الجوال','<span class="ltr">'+esc(maskPhone(c.phone))+'</span>')+info('الجهة',esc(c.orgLabel||'')+(o&&o.name!==c.orgLabel?'<div class="small muted">'+esc(o.name)+'</div>':''))+info('فرع الاستلام',c.branch?esc(c.branch)+(c.branchStrict?' (مقيّد)':''):'أي فرع')+info('العرض',esc(a?a.name:'—'))+info('صلاحيته حتى',fmtD(custEnd(c,a))+(exp?' <span class="pill p-bad">منتهي</span>':''))+info('الرصيد',remain+' من '+s.g+' هدية')+'</div>'+
-  (can('viewPhone')?'':'<!--')+'<div class="row" style="margin-bottom:12px"><a class="btn sec sm" href="tel:'+esc(localPhone(c.phone))+'">'+ic('phone')+'اتصال</a><a class="btn wa sm" target="_blank" rel="noopener" href="'+esc(waLink(c.phone,'أهلاً '+c.name+'، معك بصمة الاهتمام للاتصالات.'))+'">'+ic('whatsapp')+'واتساب العميل</a></div>'+(can('viewPhone')?'':'-->')+
-  (exp?'<div class="note" style="background:var(--badbg);border-color:#f5c2bd;color:var(--bad);margin-bottom:10px">انتهت مدة العرض – ما يمكن التسليم.</div>':'')+(off?'<div class="note" style="background:var(--badbg);border-color:#f5c2bd;color:var(--bad);margin-bottom:10px">العرض موقوف من الإدارة.</div>':'')+(wrongBr?'<div class="note" style="background:var(--warnbg);border-color:#f3d9b1;color:var(--warn);margin-bottom:10px">'+ic('store')+'هذا العميل مخصص لـ <b>'+esc(c.branch)+'</b> – ما يمكن التسليم من '+esc(curBr)+'.'+(can('approveTickets')?' <button class="btn sec sm" id="mvBr">نقله إلى '+esc(curBr)+'</button>':' اطلب من المشرف ينقله.')+(branchInfo(c.branch).map?' <a class="btn sec sm" target="_blank" rel="noopener" href="'+esc(branchInfo(c.branch).map)+'">موقع فرعه</a>':'')+'</div>':'')+(locked?'<div class="note" style="background:var(--badbg);border-color:#f5c2bd;color:var(--bad);margin-bottom:10px">'+ic('lock')+'البطاقة مقفلة بعد '+c.pinFails+' محاولات رمز خاطئة. لازم المدير يفتحها.</div>':(+c.pinFails?'<div class="note" style="background:var(--warnbg);border-color:#f3d9b1;color:var(--warn);margin-bottom:10px">'+ic('alert')+'فيه '+c.pinFails+' محاولة رمز خاطئة على هذي البطاقة.</div>':''))+
+  (can('customers.phone')?'':'<!--')+'<div class="row" style="margin-bottom:12px"><a class="btn sec sm" href="tel:'+esc(localPhone(c.phone))+'">'+ic('phone')+'اتصال</a><a class="btn wa sm" target="_blank" rel="noopener" href="'+esc(waLink(c.phone,'أهلاً '+c.name+'، معك بصمة الاهتمام للاتصالات.'))+'">'+ic('whatsapp')+'واتساب العميل</a></div>'+(can('customers.phone')?'':'-->')+
+  (exp?'<div class="note" style="background:var(--badbg);border-color:#f5c2bd;color:var(--bad);margin-bottom:10px">انتهت مدة العرض – ما يمكن التسليم.</div>':'')+(off?'<div class="note" style="background:var(--badbg);border-color:#f5c2bd;color:var(--bad);margin-bottom:10px">العرض موقوف من الإدارة.</div>':'')+(wrongBr?'<div class="note" style="background:var(--warnbg);border-color:#f3d9b1;color:var(--warn);margin-bottom:10px">'+ic('store')+'هذا العميل مخصص لـ <b>'+esc(c.branch)+'</b> – ما يمكن التسليم من '+esc(curBr)+'.'+(can('deliver.move')?' <button class="btn sec sm" id="mvBr">نقله إلى '+esc(curBr)+'</button>':' اطلب من المشرف ينقله.')+(branchInfo(c.branch).map?' <a class="btn sec sm" target="_blank" rel="noopener" href="'+esc(branchInfo(c.branch).map)+'">موقع فرعه</a>':'')+'</div>':'')+(locked?'<div class="note" style="background:var(--badbg);border-color:#f5c2bd;color:var(--bad);margin-bottom:10px">'+ic('lock')+'البطاقة مقفلة بعد '+c.pinFails+' محاولات رمز خاطئة. لازم المدير يفتحها.</div>':(+c.pinFails?'<div class="note" style="background:var(--warnbg);border-color:#f3d9b1;color:var(--warn);margin-bottom:10px">'+ic('alert')+'فيه '+c.pinFails+' محاولة رمز خاطئة على هذي البطاقة.</div>':''))+
   (!exp&&!off&&!locked&&remain>0?'<div class="note" style="margin-bottom:10px">'+(remain===1&&avail.length>1?'العميل يختار <b>هدية وحدة</b> – حدّد اللي اختارها ثم «تسليم».':'حدّد الهدية أو الهدايا اللي بيستلمها (باقي له '+remain+').')+'</div>':'')+
   '<h3>الهدايا</h3>'+(c.gifts||[]).map(g=>{const r=red[g.id];if(r)return '<div class="gift done"><span class="nm">'+ic('gift')+''+esc(g.name)+'</span><div class="small" style="text-align:left"><span class="pill p-ok">'+ic('check')+'استلمها</span><div class="muted">'+fmtDT(r.at)+'<br>'+esc(r.branch||'')+' · '+esc(nm(r.by))+'</div></div></div>';
     const ag=(a&&a.gifts||[]).find(x=>x.id===g.id)||{};const left=+ag.stock>0?Math.max(0,ag.stock-(stk[g.id]||0)):null;const out=left===0;
     const on=sel.has(g.id)&&!out;if(out)sel.delete(g.id);const dis=blocked||out||(!on&&sel.size>=remain);
     return '<label class="gift" style="cursor:'+(dis?'default':'pointer')+';'+(on?'border-color:var(--ok);background:#f2fbf6;':'')+(blocked?'opacity:.5':'')+'"><input type="checkbox" data-sel="'+g.id+'" '+(on?'checked':'')+' '+(dis?'disabled':'')+' style="width:22px;height:22px"><span class="nm">'+ic('gift')+''+esc(g.name)+(left!==null&&!out?' <span class="small muted">(باقي بالمخزون '+left+')</span>':'')+'</span>'+(out?'<span class="pill p-bad">نفدت</span>':blocked&&remain===0?'<span class="pill p-mut">انتهى رصيده</span>':'')+'</label>'}).join('')+
-  (!can('deliver')?'<div class="note" style="margin-top:6px">ما عندك صلاحية تسليم – راجع المشرف.</div>':'')+(!blocked&&can('deliver')?'<div class="row" style="margin-top:6px"><button class="btn ok" id="giveSel" style="flex:1;padding:14px" '+(sel.size?'':'disabled')+'>تسليم المحدد'+(sel.size?' ('+sel.size+')':'')+'</button>'+(canAll&&avail.length>1?'<button class="btn sec" id="giveAll" style="padding:14px">تسليم الكل ('+avail.length+')</button>':'')+'</div>':'')+
-  '</div><div class="card"><h3>ملاحظات وسجل العميل</h3><form id="nf" class="row'+(can('notes')?'':' hide')+'" style="margin-bottom:10px"><input type="text" id="nt" placeholder="أضف ملاحظة للفريق (مثال: يبي يرجع بكرة يختار)" style="flex:1"><button class="btn sec" type="submit">حفظ</button></form>'+
+  (!can('deliver.do')?'<div class="note" style="margin-top:6px">ما عندك صلاحية تسليم – راجع المشرف.</div>':'')+(!blocked&&can('deliver.do')?'<div class="row" style="margin-top:6px"><button class="btn ok" id="giveSel" style="flex:1;padding:14px" '+(sel.size?'':'disabled')+'>تسليم المحدد'+(sel.size?' ('+sel.size+')':'')+'</button>'+(canAll&&avail.length>1?'<button class="btn sec" id="giveAll" style="padding:14px">تسليم الكل ('+avail.length+')</button>':'')+'</div>':'')+
+  '</div><div class="card"><h3>ملاحظات وسجل العميل</h3><form id="nf" class="row'+(can('deliver.notes')?'':' hide')+'" style="margin-bottom:10px"><input type="text" id="nt" placeholder="أضف ملاحظة للفريق (مثال: يبي يرجع بكرة يختار)" style="flex:1"><button class="btn sec" type="submit">حفظ</button></form>'+
   tl.map(x=>'<div style="padding:8px 0;border-top:1px solid var(--line)"><div class="small">'+x.t+'</div><div class="small muted">'+fmtDT(x.at)+'</div></div>').join('')+
   '</div><div class="row" style="margin-bottom:10px"><button class="btn sec" id="tkC" style="flex:1">'+ic('ticket')+'طلب تغيير رقم هذا العميل</button></div><button class="btn sec big" id="newS">استعلام عن عميل جديد</button>';
-  if(!can('tickets'))$('#tkC',res).classList.add('hide');
+  if(!can('tickets.add'))$('#tkC',res).classList.add('hide');
   if($('#mvBr',res))$('#mvBr',res).onclick=async()=>{if(!(await confirmBox('نقل العميل','ينتقل '+esc(c.name)+' من '+esc(c.branch)+' إلى '+esc(curBr)+' ويتسجّل في سجله.','نقل')))return;try{const snap=await db.doc('customers/'+c.id).get();const cur=snap.data()||{};const notes=(cur.notes||[]).concat([{at:nowISO(),by:me||'',text:'نقل فرع الاستلام من '+cur.branch+' إلى '+curBr,branch:curBr}]).slice(-50);await db.doc('customers/'+c.id).update({branch:curBr,notes});toast('تم النقل')}catch(e){toast('تعذّر النقل')}};
   $('#tkC',res).onclick=()=>ticketForm({customerId:c.id,code:c.id,name:c.name,oldPhone:c.phone,orgLabel:c.orgLabel});
   $$('[data-sel]',res).forEach(cb=>cb.onchange=()=>{if(cb.checked){if(remain===1)sel.clear();sel.add(cb.dataset.sel)}else sel.delete(cb.dataset.sel);drawStaffCard(c,a,o)});
@@ -862,7 +926,7 @@ function giveBox(c,gs,br){return new Promise(res=>{modal('<h2>تأكيد الت�
       okb.disabled=false;okb.textContent='تأكيد التسليم';if(d.error==='bad_pin'){$('#gPin',m).value='';$('#gPin',m).focus();OF.refresh()}};
     $('#gPin',m).onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();okb.click()}};m.parentElement.addEventListener('click',e=>{if(!done&&(e.target===m.parentElement||e.target.classList.contains('x')))res(null)})})})}
 async function give(c,gids){
-  if(!gids.length)return;if(!can('deliver')){toast('ما عندك صلاحية تسليم');return}
+  if(!gids.length)return;if(!can('deliver.do')){toast('ما عندك صلاحية تسليم');return}
   const gs=(c.gifts||[]).filter(x=>gids.includes(x.id));const br=$('#br')?$('#br').value:'';
   const ok=await giveBox(c,gs,br);if(!ok)return;
   sel=new Set();toast('تم التسليم بنجاح');bumpToday(gids.length);OF.refresh();
@@ -938,7 +1002,7 @@ function renderLogin(mode){
   $$('[data-m]').forEach(b=>b.onclick=()=>renderLogin(b.dataset.m));
   const f=$('#lf');const er=$('#lerr');
   f.onsubmit=async e=>{e.preventDefault();er.textContent='';const em=f.em.value.trim().toLowerCase(),pw=f.pw.value;const btn=f.querySelector('button');btn.disabled=true;
-    if(mode==='in'){const {error}=await OF.sb.auth.signInWithPassword({email:em,password:pw});if(error){btn.disabled=false;if(/confirm/i.test(error.message)){er.textContent='لازم تأكد بريدك أولاً من الرسالة اللي وصلتك.'}else{er.innerHTML='البريد أو كلمة المرور غير صحيحة. ما عندك حساب؟ <a href="#" id="goUp">أنشئ حساب جديد</a>';$('#goUp').onclick=ev=>{ev.preventDefault();renderLogin('up')}}return}location.reload()}
+    if(mode==='in'){ssSet('bs_br_ok',null);const {error}=await OF.sb.auth.signInWithPassword({email:em,password:pw});if(error){btn.disabled=false;if(/confirm/i.test(error.message)){er.textContent='لازم تأكد بريدك أولاً من الرسالة اللي وصلتك.'}else{er.innerHTML='البريد أو كلمة المرور غير صحيحة. ما عندك حساب؟ <a href="#" id="goUp">أنشئ حساب جديد</a>';$('#goUp').onclick=ev=>{ev.preventDefault();renderLogin('up')}}return}location.reload()}
     else{const {data,error}=await OF.sb.auth.signUp({email:em,password:pw,options:{data:{name:f.nm.value.trim()},emailRedirectTo:location.origin+location.pathname}});btn.disabled=false;if(error){er.textContent=/registered/i.test(error.message)?'البريد مسجّل من قبل – سجّل دخول.':/password/i.test(error.message)?'كلمة المرور ضعيفة – 8 خانات على الأقل.':'تعذّر إنشاء الحساب: '+error.message;return}
       if(data.session){location.reload();return}
       authShell('<h2>'+ic('check')+'تم إنشاء الحساب</h2><p class="muted">أرسلنا رسالة تأكيد إلى <b class="ltr">'+esc(em)+'</b>. افتحها واضغط رابط التأكيد، وبعدها ارجع هنا وسجّل الدخول.</p><button class="btn big" onclick="location.reload()">تسجيل الدخول</button>')}};
