@@ -59,7 +59,7 @@ sb.auth.onAuthStateChange((ev)=>{if(ev==='PASSWORD_RECOVERY')OF.recovery=true});
 </script>
 
 <style>
-:root{--navy:#0c2d6b;--navy2:#123f94;--teal:#0f8f9c;--bg:#f4f6fb;--card:#fff;--line:#e3e8f2;--text:#152033;--muted:#647089;--ok:#12805c;--okbg:#e4f6ee;--warn:#a85d00;--warnbg:#fff3e0;--bad:#b42318;--badbg:#fdecea;--r:14px}
+:root{--navy:#0a3c4f;--navy2:#0a7896;--teal:#0a7896;--bg:#f4f6fb;--card:#fff;--line:#e3e8f2;--text:#152033;--muted:#647089;--ok:#12805c;--okbg:#e4f6ee;--warn:#a85d00;--warnbg:#fff3e0;--bad:#b42318;--badbg:#fdecea;--r:14px}
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:"IBM Plex Sans Arabic",system-ui,sans-serif;font-size:15px}
 button,input,select,textarea{font-family:inherit;font-size:15px}
@@ -153,7 +153,7 @@ input:focus,select:focus,textarea:focus{outline:2px solid #b9cbf0;border-color:v
 .note{background:#eef6ff;border:1px solid #cfe2ff;color:#1e3a8a;border-radius:12px;padding:10px 14px;font-size:13px;line-height:1.7}
 .hide{display:none !important}
 /* ---- formal theme ---- */
-:root{--navy:#0b2a5b;--navy2:#143d7a;--teal:#0e7c86;--bg:#f4f5f7;--line:#e3e6eb;--text:#1b2332;--muted:#667085;--r:10px}
+:root{--navy:#0a3c4f;--navy2:#0a7896;--teal:#0a7896;--bg:#f4f5f7;--line:#e3e6eb;--text:#1b2332;--muted:#667085;--r:10px}
 body{font-size:14.5px;letter-spacing:0}
 .ic{width:16px;height:16px;vertical-align:-3px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;margin-inline-end:6px;flex-shrink:0}
 h1{font-weight:700;font-size:21px}h2{font-weight:700;font-size:17px}h3{font-weight:600;font-size:15px}
@@ -190,10 +190,10 @@ input[type=text],input[type=tel],input[type=date],input[type=search],select,text
 
 /* ===== Landing ===== */
 body.lp-body{background:#fff}
-.lp{--n1:#071a3f;--n2:#0c2d6b;--n3:#123f94;--t1:#0f8f9c;--t2:#16b3c2;--ink:#0d1b33;--mut:#5b6884;color:var(--ink);overflow-x:hidden}
+.lp{--n1:#062430;--n2:#0a3c4f;--n3:#0a7896;--t1:#0a7896;--t2:#1fa6c6;--ink:#0d1b33;--mut:#5b6884;color:var(--ink);overflow-x:hidden}
 .lp-wrap{max-width:1180px;margin:0 auto;padding:0 22px}
 .lp-nav{position:fixed;inset:0 0 auto 0;z-index:50;transition:.3s;padding:14px 0}
-.lp-nav.on{background:rgba(7,26,63,.82);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 8px 30px rgba(0,0,0,.18);padding:8px 0}
+.lp-nav.on{background:rgba(6,36,48,.85);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 8px 30px rgba(0,0,0,.18);padding:8px 0}
 .lp-nav-in{display:flex;align-items:center;gap:18px}
 .lp-brand{display:flex;align-items:center;gap:10px;color:#fff;text-decoration:none;font-weight:700;font-size:17px;line-height:1.15}
 .lp-brand small{display:block;font-size:11px;font-weight:500;opacity:.75}
@@ -212,11 +212,11 @@ body.lp-body{background:#fff}
 .lp-nav .lp-btn-ghost{color:#fff}
 .lp-btn-white{background:#fff;color:var(--n2);box-shadow:0 10px 26px rgba(0,0,0,.18)}
 /* hero */
-.lp-hero{position:relative;background:radial-gradient(1200px 600px at 80% -10%,#1b4fb0 0%,transparent 60%),linear-gradient(160deg,var(--n1) 0%,var(--n2) 55%,#0b3b6e 100%);color:#fff;padding:130px 0 0;overflow:hidden;min-height:92vh;display:flex;flex-direction:column}
+.lp-hero{position:relative;background:radial-gradient(1200px 600px at 80% -10%,#0f6f8c 0%,transparent 60%),linear-gradient(160deg,var(--n1) 0%,var(--n2) 55%,#0b4a5e 100%);color:#fff;padding:130px 0 0;overflow:hidden;min-height:92vh;display:flex;flex-direction:column}
 .lp-grid-bg{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px);background-size:56px 56px;mask-image:radial-gradient(ellipse at 50% 30%,#000 30%,transparent 75%)}
 .lp-glow{position:absolute;border-radius:50%;filter:blur(90px);opacity:.55;pointer-events:none}
 .lp-glow.g1{width:520px;height:520px;background:#16b3c2;top:-120px;left:-120px;animation:lpFloat 12s ease-in-out infinite}
-.lp-glow.g2{width:420px;height:420px;background:#3b6fe0;bottom:-160px;right:20%;animation:lpFloat 14s ease-in-out infinite reverse}
+.lp-glow.g2{width:420px;height:420px;background:#8a96a0;bottom:-160px;right:20%;animation:lpFloat 14s ease-in-out infinite reverse}
 .lp-glow.g3{width:600px;height:600px;background:#16b3c2;top:-200px;right:-200px;opacity:.25}
 .lp-hero-in{position:relative;display:grid;grid-template-columns:1.05fr .95fr;gap:40px;align-items:center;flex:1;padding-bottom:40px}
 .lp-chip{display:inline-flex;align-items:center;gap:8px;padding:7px 14px;border-radius:999px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);font-size:13px}
@@ -315,6 +315,10 @@ body.lp-body{background:#fff}
 @media (max-width:560px){.lp-nav-cta .lp-btn-ghost{display:none}.lp-brand{font-size:15px}.lp-hero{padding-top:110px}.lp-hero p{font-size:16px}.lp-svc,.lp-why,.lp-ach{grid-template-columns:1fr}.lp-sec{padding:70px 0}.lp-about-pts{grid-template-columns:1fr}.lp-hero-art{height:340px}.lp-float.f2{display:none}.lp-cta-in{padding:28px}}
 @media (prefers-reduced-motion:reduce){.lp *{animation:none!important;transition:none!important}.rv{opacity:1;transform:none}}
 
+.bsl{display:inline-block;height:var(--h);background:url(https://cdn.salla.sa/QAapr/dplfh3v7Hlh3zInBcOT755vRIzi7jxIc6teFhmW0.png) no-repeat;background-size:calc(var(--h)*2.788) auto;vertical-align:middle;flex:none}
+.bsl-f{width:calc(var(--h)*2.465);background-position:calc(var(--h)*-0.1756) calc(var(--h)*-0.7143)}
+.bsl-i{width:calc(var(--h)*0.9105);background-position:calc(var(--h)*-1.7298) calc(var(--h)*-0.7143)}
+.bsl-w{filter:brightness(0) invert(1)}
 </style>
 </head>
 <body>
@@ -326,7 +330,9 @@ body.lp-body{background:#fff}
 "use strict";
 // ---------- helpers ----------
 const ICONS={gift:'<path d="M20 12v9H4v-9"/><path d="M2 7h20v5H2z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 1 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 1 0 0-5C13 2 12 7 12 7z"/>',store:'<path d="M3 9l1.5-5h15L21 9"/><path d="M3 9h18v2a3 3 0 0 1-6 0 3 3 0 0 1-6 0 3 3 0 0 1-6 0z"/><path d="M5 13v8h14v-8"/><path d="M10 21v-5h4v5"/>',key:'<circle cx="7.5" cy="15.5" r="4.5"/><path d="M10.7 12.3 21 2"/><path d="m16 7 3 3"/><path d="m19 4 2 2"/>',lock:'<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',ticket:'<path d="M3 7a2 2 0 0 0 2-2h14a2 2 0 0 0 2 2v3a2 2 0 0 0 0 4v3a2 2 0 0 0-2 2H5a2 2 0 0 0-2-2v-3a2 2 0 0 0 0-4z"/><path d="M13 5v2M13 11v2M13 17v2"/>',note:'<path d="M4 4h16v12l-4 4H4z"/><path d="M16 20v-4h4"/><path d="M8 9h8M8 13h5"/>',pin:'<path d="M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/>',download:'<path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 21h16"/>',upload:'<path d="M12 21V9"/><path d="m7 14 5-5 5 5"/><path d="M4 3h16"/>',megaphone:'<path d="M3 11v2a1 1 0 0 0 1 1h3l6 4V6L7 10H4a1 1 0 0 0-1 1z"/><path d="M17 8a5 5 0 0 1 0 8"/>',alert:'<path d="M12 3 2 21h20z"/><path d="M12 10v5M12 18h.01"/>',users:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 20a6.5 6.5 0 0 0-2.5-5.1"/>',shield:'<path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/>',gear:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',camera:'<path d="M4 7h3l2-3h6l2 3h3a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="4"/>',user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',phone:'<path d="M5 3h4l2 5-2.5 1.5a11 11 0 0 0 6 6L16 13l5 2v4a2 2 0 0 1-2 2A17 17 0 0 1 3 5a2 2 0 0 1 2-2"/>',check:'<path d="m5 12 5 5L20 7"/>',whatsapp:'<path d="M3.5 20.5 5 16a8.5 8.5 0 1 1 3.2 3.1z"/><path d="M9 9.5c0 3 2.5 5.5 5.5 5.5l1-1.5-2-1-1 1a4 4 0 0 1-2-2l1-1-1-2z"/>',qr:'<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM20 14v.01M14 20h.01M17 20h4v-3"/>',search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>'};
-const LOGO=(sz,dark)=>'<svg viewBox="0 0 48 48" width="'+sz+'" height="'+sz+'" aria-label="بصمة الاهتمام"><g fill="none" stroke="'+(dark?'#0b2a5b':'#fff')+'" stroke-width="2.2" stroke-linecap="round"><path d="M10 30a14 14 0 0 1 28 0"/><path d="M14.5 31a9.5 9.5 0 0 1 19 0"/><path d="M19 32a5 5 0 0 1 10 0v6"/><path d="M24 32v10"/></g><circle cx="24" cy="44" r="1.8" fill="#0e7c86"/><text x="24" y="11" text-anchor="middle" font-family="IBM Plex Sans Arabic,Arial" font-weight="700" font-size="10.5" fill="'+(dark?'#0b2a5b':'#fff')+'">BS</text></svg>';
+const LOGO_URL='https://cdn.salla.sa/QAapr/dplfh3v7Hlh3zInBcOT755vRIzi7jxIc6teFhmW0.png';
+const LOGO=(sz,dark)=>'<span class="bsl bsl-i'+(dark?'':' bsl-w')+'" style="--h:'+sz+'px" role="img" aria-label="بصمة الاهتمام للاتصالات"></span>';
+const LOGOF=(sz,dark)=>'<span class="bsl bsl-f'+(dark?'':' bsl-w')+'" style="--h:'+sz+'px" role="img" aria-label="بصمة الاهتمام للاتصالات"></span>';
 const ic=(n,sz)=>'<svg class="ic" viewBox="0 0 24 24" '+(sz?'style="width:'+sz+'px;height:'+sz+'px"':'')+' aria-hidden="true">'+(ICONS[n]||'')+'</svg>';
 const $=(s,r=document)=>r.querySelector(s);
 const $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
@@ -504,7 +510,7 @@ async function renderLanding(){
   const homeBtn=OF.session?'<a class="lp-btn lp-btn-glass" href="#'+(isOwner||isPanelUser()?'admin':(staffMe?'staff':'account'))+'">'+(isOwner||staffMe?'لوحة التحكم':'حسابي')+'</a>':'<a class="lp-btn lp-btn-glass" href="#login">تسجيل الدخول</a>';
   const stats=[[br.length,'فروع في أبها'],[st.orgs,'جهة شريكة'],[st.customers,'مستفيد من عروض الجهات'],[st.delivered,'هدية مسلّمة']].filter(x=>+x[0]>0);
   $('#app').innerHTML='<div class="lp">'+
-  '<header class="lp-nav" id="lpNav"><div class="lp-wrap lp-nav-in"><a href="#" class="lp-brand"><span class="lp-logo">'+LOGO(34)+'</span><span>بصمة الاهتمام<small>للاتصالات</small></span></a>'+
+  '<header class="lp-nav" id="lpNav"><div class="lp-wrap lp-nav-in"><a href="#" class="lp-brand" aria-label="بصمة الاهتمام للاتصالات">'+LOGOF(46)+'</a>'+
   '<nav class="lp-links"><a href="#" data-to="about">من نحن</a><a href="#" data-to="services">خدماتنا</a><a href="#" data-to="ach">إنجازاتنا</a><a href="#" data-to="orgs">الجهات</a><a href="#" data-to="branches">فروعنا</a></nav>'+
   '<div class="lp-nav-cta"><a class="lp-btn lp-btn-ghost" target="_blank" rel="noopener" href="'+esc(store)+'">المتجر</a>'+homeBtn+'</div></div></header>'+
   // HERO
@@ -532,7 +538,7 @@ async function renderLanding(){
   '<section class="lp-sec" id="branches"><div class="lp-wrap"><div class="lp-head rv"><span class="lp-kicker">فروعنا</span><h2>زورنا في أبها</h2></div><div class="lp-br">'+br.map((b,i)=>'<div class="lp-br-c rv" style="--d:'+(i*80)+'ms"><div class="lp-br-top">'+lpI('phone','sm')+'<h3>'+esc(b.name)+'</h3></div>'+(b.address?'<p>'+esc(b.address)+'</p>':'')+'<div class="lp-br-act">'+(b.map?'<a class="lp-btn lp-btn-main sm" target="_blank" rel="noopener" href="'+esc(b.map)+'">الموقع على الخريطة</a>':'')+(b.phone?'<a class="lp-btn lp-btn-ghost sm" href="tel:'+esc(b.phone)+'">اتصال '+esc(b.phone)+'</a>':'')+'</div></div>').join('')+'</div></div></section>'+
   // CTA
   '<section class="lp-cta"><div class="lp-wrap lp-cta-in rv"><div><h2>جاهز نخدمك؟</h2><p>سجّل دخولك واطلب خدمتك، ويتواصل معك فريقنا بأسرع وقت.</p></div><div class="lp-hero-cta"><button class="lp-btn lp-btn-white" onclick="lpGo()">اطلب خدمتك</button><a class="lp-btn lp-btn-glass" target="_blank" rel="noopener" href="'+esc(store)+'">تسوّق من المتجر</a></div></div></section>'+
-  '<footer class="lp-foot"><div class="lp-wrap lp-foot-in"><div class="lp-brand"><span class="lp-logo">'+LOGO(30)+'</span><span>بصمة الاهتمام للاتصالات<small>أبها – المملكة العربية السعودية</small></span></div><div class="lp-foot-l"><a target="_blank" rel="noopener" href="'+esc(store)+'">المتجر الإلكتروني</a><a href="tel:0577894369">0577894369</a><a href="#login">دخول الموظفين</a></div><small>© '+new Date().getFullYear()+' بصمة الاهتمام للاتصالات</small></div></footer>'+
+  '<footer class="lp-foot"><div class="lp-wrap lp-foot-in"><div class="lp-brand">'+LOGOF(44)+'<span style="font-size:13px;opacity:.7;font-weight:500">أبها – المملكة العربية السعودية</span></div><div class="lp-foot-l"><a target="_blank" rel="noopener" href="'+esc(store)+'">المتجر الإلكتروني</a><a href="tel:0577894369">0577894369</a><a href="#login">دخول الموظفين</a></div><small>© '+new Date().getFullYear()+' بصمة الاهتمام للاتصالات</small></div></footer>'+
   '<a class="lp-wa" target="_blank" rel="noopener" aria-label="واتساب" href="https://wa.me/'+STORE_WA+'">'+ic('whatsapp')+'</a></div>';
   $$('[data-to]').forEach(a=>a.onclick=e=>{e.preventDefault();const t=document.getElementById(a.dataset.to);if(t)window.scrollTo({top:t.getBoundingClientRect().top+scrollY-70,behavior:'smooth'})});
   const nav=$('#lpNav');const onS=()=>{if(nav)nav.classList.toggle('on',scrollY>30)};window.addEventListener('scroll',onS,{passive:true});onS();
@@ -601,6 +607,7 @@ function route(){
   document.body.classList.toggle('lp-body',h===''||h==='home');
   if(h.startsWith('reg-'))return renderRegister(h.slice(4));
   if(OF.recovery)return renderSetPassword();
+  if(/access_token|error_description|type=/.test(h)){history.replaceState(null,'',location.pathname+(OF.session?'#login':'#'));return route()}
   if(h===''||h==='home')return renderLanding();
   if(!OF.session)return renderLogin();
   const isStaffUser=isOwner||!!(staffMe&&staffMe.active!==false);
@@ -1027,7 +1034,7 @@ async function drawInvites(box,link){if(!box)return;
   let L=[];try{const s=await db.collection('staffInvites').get();L=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(a.name).localeCompare(String(b.name)))}catch(e){}
   const pend=L.filter(x=>!x.claimed),done=L.filter(x=>x.claimed);
   box.innerHTML='<div class="row" style="justify-content:space-between"><h2 style="margin:0">'+ic('users')+'الموظفين المعتمدين مسبقاً ('+L.length+')</h2>'+(can('staff.add')?'<button class="btn sm" id="invAdd">+ إضافة إيميلات</button>':'')+'</div>'+
-  '<p class="small muted">أي موظف إيميله هنا يسوي حسابه من <span class="ltr">'+esc(link)+'</span> بكلمة سر يختارها، ويدخل مباشرة بصلاحيات «موظف أساسي» (استعلام وتسليم وملاحظات فقط) بدون طلب انضمام. تقدر تعدّل صلاحياته بعدها.</p>'+
+  '<p class="small muted">أي موظف إيميله هنا يدخل من <span class="ltr">'+esc(link)+'</span> بإيميله فقط (يوصله رمز دخول على بريده)، ويدخل مباشرة بصلاحيات «موظف أساسي» (استعلام وتسليم وملاحظات فقط) بدون طلب انضمام. تقدر تعدّل صلاحياته بعدها.</p>'+
   (L.length?'<div class="scroll"><table class="tbl"><thead><tr><th>الاسم</th><th>الإيميل</th><th>الحالة</th><th></th></tr></thead><tbody>'+pend.concat(done).map(x=>'<tr><td>'+esc(x.name||'')+'</td><td class="ltr small">'+esc(x.id)+'</td><td>'+(x.claimed?'<span class="pill p-ok">سجّل ودخل</span>':'<span class="pill p-warn">بانتظار تسجيله</span>')+'</td><td>'+(can('staff.add')&&!x.claimed?'<button class="btn bad sm" data-invdel="'+esc(x.id)+'">حذف</button>':'')+'</td></tr>').join('')+'</tbody></table></div>':'<div class="empty">ما فيه إيميلات معتمدة.</div>');
   const ad=$('#invAdd',box);if(ad)ad.onclick=()=>modal('<h2>إضافة إيميلات موظفين</h2><p class="small muted">كل موظف في سطر: الاسم، الإيميل</p><textarea id="invT" style="min-height:180px;direction:rtl" placeholder="محمد أحمد، m.ahmed@gmail.com"></textarea><button class="btn" id="invOk" style="margin-top:10px">إضافة</button>',(m,close)=>{$('#invOk',m).onclick=async()=>{const rows=$('#invT',m).value.split('\n').map(l=>{const em=(l.match(/[^\s,،;]+@[^\s,،;]+\.[a-z]{2,}/i)||[])[0];return em?{email:em.toLowerCase(),name:l.replace(em,'').replace(/[,،;:\-\t]+/g,' ').trim()}:null}).filter(Boolean);if(!rows.length){toast('ما لقيت إيميلات');return}let n=0;for(const r of rows){try{await db.doc('staffInvites/'+r.email).set({name:r.name||r.email,role:'staff',perms:BASIC_PERMS,branches:[],createdAt:nowISO()});n++}catch(e){}}close();toast('تمت إضافة '+n);drawInvites(box,link)}});
   $$('[data-invdel]',box).forEach(b=>b.onclick=async()=>{try{await db.doc('staffInvites/'+b.dataset.invdel).delete();drawInvites(box,link)}catch(e){toast('تعذّر')}});
@@ -1257,7 +1264,7 @@ async function renderRegister(orgId){
   let info=null;try{const r=await OF.sb.rpc('of_public_org',{p_org:orgId});info=r.data}catch(e){}
   const org=info&&info.org,ag=info&&info.agreement;
   if(info&&info.settings)S.settings=Object.assign({},S.settings||{},info.settings);
-  const head='<div class="reghead"><div class="logo">'+LOGO(72,true)+'</div><h1>بصمة الاهتمام للاتصالات</h1>'+(org?'<p class="sub">عرض خاص لمنسوبي <b>'+esc(org.name)+'</b></p>':'')+'</div>';
+  const head='<div class="reghead"><div style="margin:10px 0 6px">'+LOGOF(70,true)+'</div>'+(org?'<p class="sub">عرض خاص لمنسوبي <b>'+esc(org.name)+'</b></p>':'')+'</div>';
   const back=OF.session?'<p style="text-align:center"><a href="#admin" class="small">← رجوع للوحة التحكم</a></p>':'';
   if(!org){$('#app').innerHTML='<div class="wrap reg">'+head+'<div class="card empty">الرابط غير صحيح أو انحذف.</div>'+back+'</div>';return}
   const pre=pickBranch(org,info.counts||{},null);
@@ -1289,21 +1296,29 @@ function regDone(c,ag,existed){
   if(!(S.settings&&S.settings.servicesOff)){const items=((S.settings&&S.settings.servicesText)||DEFAULT_SVC).split('•').map(x=>x.trim()).filter(Boolean);card.insertAdjacentHTML('beforeend','<div style="margin-top:14px;border-top:1px solid var(--line);padding-top:14px"><h3>خدماتنا</h3><div class="row" style="margin-bottom:10px">'+items.map(x=>'<span class="pill p-mut" style="font-weight:500">'+esc(x)+'</span>').join('')+'</div><a class="btn sec big" target="_blank" rel="noopener" href="'+esc(svcUrl())+'">تعرّف على خدماتنا ومنتجاتنا</a></div>')}
   drawQR($('#qrR'),c.id,200);
 }
-function authShell(inner){$('#app').innerHTML='<div class="wrap reg"><p style="margin:14px 0 0"><a href="#" class="small">→ الصفحة الرئيسية</a></p><div class="reghead"><div class="logo">'+LOGO(72,true)+'</div><h1>بصمة الاهتمام للاتصالات</h1><p class="sub">نظام عروض الجهات</p></div><div class="card">'+inner+'</div></div>'}
-function renderLogin(mode){
-  mode=mode||'in';document.body.classList.remove('lp-body');
-  authShell('<nav class="tabs" style="margin-top:0"><button data-m="in" class="'+(mode==='in'?'on':'')+'">تسجيل الدخول</button><button data-m="up" class="'+(mode==='up'?'on':'')+'">إنشاء حساب جديد</button></nav>'+
-    '<form id="lf">'+(mode==='up'?'<label class="f"><span>الاسم</span><input type="text" name="nm" required></label>':'')+'<label class="f"><span>البريد الإلكتروني</span><input type="text" name="em" required inputmode="email" autocomplete="email" style="direction:ltr;text-align:right"></label><label class="f"><span>كلمة المرور <span class="small muted">(8 خانات أو أكثر)</span></span><input type="password" name="pw" required minlength="8" autocomplete="'+(mode==='up'?'new-password':'current-password')+'" style="width:100%;padding:10px 12px;border:1px solid #d7dbe2;border-radius:8px;direction:ltr"></label><div class="err" id="lerr"></div><button class="btn big" type="submit">'+(mode==='up'?'إنشاء الحساب':'دخول')+'</button></form>'+
-    (mode==='in'?'<p style="text-align:center;margin:12px 0 0"><a href="#" id="forgot" class="small">نسيت كلمة المرور؟</a> · <a href="#" id="goUp2" class="small">أول مرة؟ أنشئ حساب</a></p>':'<p class="small muted" style="margin-top:10px">بعد إنشاء الحساب يوصلك إيميل تأكيد. أكّد الحساب ثم سجّل الدخول. الموظف المضاف من الإدارة يدخل واجهته مباشرة.</p>'));
-  $$('[data-m]').forEach(b=>b.onclick=()=>renderLogin(b.dataset.m));
+function authShell(inner){$('#app').innerHTML='<div class="wrap reg"><p style="margin:14px 0 0"><a href="#" class="small">→ الصفحة الرئيسية</a></p><div class="reghead"><div style="margin:10px 0 6px">'+LOGOF(70,true)+'</div><p class="sub">نظام عروض الجهات</p></div><div class="card">'+inner+'</div></div>'}
+function renderLogin(mode,email){
+  mode=mode||'otp';document.body.classList.remove('lp-body');
+  const emIn='<label class="f"><span>البريد الإلكتروني</span><input type="text" name="em" required inputmode="email" autocomplete="email" value="'+esc(email||'')+'" style="direction:ltr;text-align:right"></label>';
+  if(mode==='otp'){
+    authShell('<h2 style="margin-top:0;text-align:center">تسجيل الدخول</h2><p class="sub" style="text-align:center">اكتب بريدك ويوصلك رمز دخول. ما تحتاج كلمة مرور.</p><form id="lf">'+emIn+'<div class="err" id="lerr"></div><button class="btn big" type="submit">أرسل رمز الدخول</button></form><p style="text-align:center;margin:12px 0 0"><a href="#" id="toPw" class="small">الدخول بكلمة المرور</a></p>');
+  }else if(mode==='code'){
+    authShell('<h2 style="margin-top:0;text-align:center">'+ic('key')+'أدخل رمز الدخول</h2><p class="sub" style="text-align:center">أرسلنا رمز ورابط دخول إلى <b class="ltr">'+esc(email)+'</b>. اكتب الرمز هنا أو اضغط الرابط في الرسالة.</p><form id="lf"><label class="f"><span>الرمز</span><input type="text" name="code" required inputmode="numeric" autocomplete="one-time-code" maxlength="8" style="direction:ltr;text-align:center;font-size:24px;letter-spacing:8px"></label><div class="err" id="lerr"></div><button class="btn big" type="submit">دخول</button></form><p style="text-align:center;margin:12px 0 0"><a href="#" id="back" class="small">تغيير البريد</a></p>');
+  }else{
+    authShell('<h2 style="margin-top:0;text-align:center">الدخول بكلمة المرور</h2><form id="lf">'+emIn+'<label class="f"><span>كلمة المرور</span><input type="password" name="pw" required autocomplete="current-password" style="width:100%;padding:10px 12px;border:1px solid #d7dbe2;border-radius:8px;direction:ltr"></label><div class="err" id="lerr"></div><button class="btn big" type="submit">دخول</button></form><p style="text-align:center;margin:12px 0 0"><a href="#" id="forgot" class="small">نسيت كلمة المرور؟</a> · <a href="#" id="toOtp" class="small">الدخول برمز على البريد</a></p>');
+  }
   const f=$('#lf');const er=$('#lerr');
-  f.onsubmit=async e=>{e.preventDefault();er.textContent='';const em=f.em.value.trim().toLowerCase(),pw=f.pw.value;const btn=f.querySelector('button');btn.disabled=true;
-    if(mode==='in'){ssSet('bs_br_ok',null);const {error}=await OF.sb.auth.signInWithPassword({email:em,password:pw});if(error){btn.disabled=false;if(/confirm/i.test(error.message)){er.textContent='لازم تأكد بريدك أولاً من الرسالة اللي وصلتك.'}else{er.innerHTML='البريد أو كلمة المرور غير صحيحة. ما عندك حساب؟ <a href="#" id="goUp">أنشئ حساب جديد</a>';$('#goUp').onclick=ev=>{ev.preventDefault();renderLogin('up')}}return}location.reload()}
-    else{const {data,error}=await OF.sb.auth.signUp({email:em,password:pw,options:{data:{name:f.nm.value.trim()},emailRedirectTo:location.origin+location.pathname}});btn.disabled=false;if(error){er.textContent=/registered/i.test(error.message)?'البريد مسجّل من قبل – سجّل دخول.':/password/i.test(error.message)?'كلمة المرور ضعيفة – 8 خانات على الأقل.':'تعذّر إنشاء الحساب: '+error.message;return}
-      if(data.session){location.reload();return}
-      authShell('<h2>'+ic('check')+'تم إنشاء الحساب</h2><p class="muted">أرسلنا رسالة تأكيد إلى <b class="ltr">'+esc(em)+'</b>. افتحها واضغط رابط التأكيد، وبعدها ارجع هنا وسجّل الدخول.</p><button class="btn big" onclick="location.reload()">تسجيل الدخول</button>')}};
-  const g2=$('#goUp2');if(g2)g2.onclick=e=>{e.preventDefault();renderLogin('up')};
-  const fg=$('#forgot');if(fg)fg.onclick=async e=>{e.preventDefault();const em=f.em.value.trim().toLowerCase();if(!em){er.textContent='اكتب بريدك أولاً';return}await OF.sb.auth.resetPasswordForEmail(em,{redirectTo:location.origin+location.pathname});er.style.color='var(--ok)';er.textContent='أرسلنا رابط تغيير كلمة المرور لبريدك.'};
+  const tp=$('#toPw');if(tp)tp.onclick=e=>{e.preventDefault();renderLogin('pw',f.em&&f.em.value)};
+  const to=$('#toOtp');if(to)to.onclick=e=>{e.preventDefault();renderLogin('otp',f.em&&f.em.value)};
+  const bk=$('#back');if(bk)bk.onclick=e=>{e.preventDefault();renderLogin('otp',email)};
+  f.onsubmit=async e=>{e.preventDefault();er.textContent='';er.style.color='';const btn=f.querySelector('button');btn.disabled=true;ssSet('bs_br_ok',null);
+    if(mode==='otp'){const em=f.em.value.trim().toLowerCase();if(!/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(em)){er.textContent='البريد غير صحيح';btn.disabled=false;return}
+      const {error}=await OF.sb.auth.signInWithOtp({email:em,options:{shouldCreateUser:true,emailRedirectTo:location.origin+'/#login'}});btn.disabled=false;
+      if(error){er.textContent=/rate|seconds|limit/i.test(error.message)?'تم إرسال رموز كثيرة – انتظر شوي وحاول مرة ثانية.':'تعذّر الإرسال: '+error.message;return}
+      return renderLogin('code',em)}
+    if(mode==='code'){const tk=toLatin(f.code.value).replace(/\D/g,'');const {error}=await OF.sb.auth.verifyOtp({email,token:tk,type:'email'});if(error){btn.disabled=false;er.textContent='الرمز غير صحيح أو انتهت صلاحيته.';return}location.hash='login';location.reload();return}
+    const em=f.em.value.trim().toLowerCase();const {error}=await OF.sb.auth.signInWithPassword({email:em,password:f.pw.value});if(error){btn.disabled=false;er.textContent=/confirm/i.test(error.message)?'لازم تأكد بريدك أولاً.':'البريد أو كلمة المرور غير صحيحة.';return}location.hash='login';location.reload()};
+  const fg=$('#forgot');if(fg)fg.onclick=async e=>{e.preventDefault();const em=f.em.value.trim().toLowerCase();if(!em){er.textContent='اكتب بريدك أولاً';return}await OF.sb.auth.resetPasswordForEmail(em,{redirectTo:location.origin+'/'});er.style.color='var(--ok)';er.textContent='أرسلنا رابط تغيير كلمة المرور لبريدك.'};
 }
 function renderSetPassword(){
   authShell('<h2>تعيين كلمة مرور جديدة</h2><form id="pf"><label class="f"><span>كلمة المرور الجديدة</span><input type="password" name="pw" required minlength="8" style="width:100%;padding:10px 12px;border:1px solid #d7dbe2;border-radius:8px;direction:ltr"></label><div class="err" id="perr"></div><button class="btn big" type="submit">حفظ</button></form>');
