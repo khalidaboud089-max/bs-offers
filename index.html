@@ -499,7 +499,7 @@ const PIN_MAX=5;
 function isExpired(a){if(!a||!a.endsAt)return false;const end=new Date(a.endsAt+'T23:59:59');return Date.now()>end.getTime()}
 const allowedOf=c=>Math.min((c.gifts||[]).length,Math.max(1,+c.giftsAllowed||1));
 function custStatus(c){const g=allowedOf(c);const r=Object.keys(c.redemptions||{}).filter(k=>(c.gifts||[]).some(x=>x.id===k)).length;if(!g)return{k:'none',t:'بدون هدايا',cls:'p-mut',r,g};if(r===0)return{k:'pending',t:'لم يستلم',cls:'p-warn',r,g};if(r<g)return{k:'partial',t:'استلم جزئياً',cls:'p-s1',r,g};return{k:'done',t:'استلم',cls:'p-ok',r,g}}
-function giftsText(c){const n=(c.gifts||[]).map(g=>g.name);const k=allowedOf(c);if(n.length<=1)return n.join('')||'—';return (k===1?'هدية وحدة تختارها من: ':k+' هدايا تختارها من: ')+n.join(' أو ')}
+function giftsText(c){const n=(c.gifts||[]).map(g=>g.name);const k=allowedOf(c);if(n.length<=1)return n.join('')||'—';if(k>=n.length)return n.join(' + ');return (k===1?'هدية وحدة تختارها من: ':k+' هدايا تختارها من: ')+n.join(' أو ')}
 function fillMsg(c){const a=agreementOf(c)||{};let t=(a.message||DEFAULT_MSG);if(c.branch&&t.indexOf('{الفرع}')<0&&t.indexOf('{رابط_الفرع}')<0)t+='\n\n'+brLine(c);t=t.split('{الفرع}').join(c.branch||'أقرب فرع').split('{رابط_الفرع}').join(c.branch?(branchInfo(c.branch).map||''):'');t=addSvc(t);if(t.indexOf('{رمز_التسليم}')<0)t+='\n\nرمز التسليم: {رمز_التسليم}\nيُرجى عدم مشاركة الرمز إلا مع موظف الفرع عند الاستلام.';t=t.split('{رمز_التسليم}').join((OF.pins&&OF.pins[c.id])||c.pin||'----');return t.split('{الاسم}').join(c.name||'').split('{الكود}').join(c.code||c.id).split('{الجهة}').join(c.orgLabel||'').split('{الهدايا}').join(giftsText(c)).split('{الانتهاء}').join(fmtD(custEnd(c,a)))}
 const waLink=(phone,text)=>'https://wa.me/'+phone+'?text='+encodeURIComponent(text);
 function regLink(org){const base=(S.settings.baseUrl||'').replace(/#.*$/,'');return base?base+'#reg-'+org.id:'(أضف رابط الصفحة من الإعدادات)#reg-'+org.id}
@@ -696,6 +696,7 @@ function route(){
   const home=()=>isStaffUser?((isOwner||(isPanelUser()&&!can('deliver.view')))?'admin':'staff'):'account';
   if(h==='login'){location.hash=home();return}
   if(!isStaffUser)return (h==='staff'||h==='join')?renderJoin():renderAccount();
+  if(!isOwner&&staffMe&&staffMe.mustChangePw)return renderSetPassword(true);
   if(h==='account'){location.hash=home();return}
   const wantsPanel=(h==='admin'||(h==='staff'&&!isOwner&&!can('deliver.view')))&&isPanelUser();
   const isStaffRoute=!wantsPanel;
@@ -1402,9 +1403,12 @@ function renderLogin(mode,email){
     const em=f.em.value.trim().toLowerCase();const {error}=await OF.sb.auth.signInWithPassword({email:em,password:f.pw.value});if(error){btn.disabled=false;er.textContent=/confirm/i.test(error.message)?'لازم تأكد بريدك أولاً.':'البريد أو كلمة المرور غير صحيحة.';return}location.hash='login';location.reload()};
   const fg=$('#forgot');if(fg)fg.onclick=async e=>{e.preventDefault();const em=f.em.value.trim().toLowerCase();if(!em){er.textContent='اكتب بريدك أولاً';return}await OF.sb.auth.resetPasswordForEmail(em,{redirectTo:location.origin+'/'});er.style.color='var(--ok)';er.textContent='أرسلنا رابط تغيير كلمة المرور لبريدك.'};
 }
-function renderSetPassword(){
-  authShell('<h2>تعيين كلمة مرور جديدة</h2><form id="pf"><label class="f"><span>كلمة المرور الجديدة</span><input type="password" name="pw" required minlength="8" style="width:100%;padding:10px 12px;border:1px solid #d7dbe2;border-radius:8px;direction:ltr"></label><div class="err" id="perr"></div><button class="btn big" type="submit">حفظ</button></form>');
-  $('#pf').onsubmit=async e=>{e.preventDefault();const {error}=await OF.sb.auth.updateUser({password:e.target.pw.value});if(error){$('#perr').textContent='تعذّر الحفظ: '+error.message;return}OF.recovery=false;location.hash='';location.reload()};
+function renderSetPassword(forced){
+  const inp=n=>'<label class="f"><span>'+n+'</span><input type="password" name="'+(n.includes('تأكيد')?'pw2':'pw')+'" required minlength="8" autocomplete="new-password" style="width:100%;padding:10px 12px;border:1px solid #d7dbe2;border-radius:8px;direction:ltr"></label>';
+  authShell('<h2 style="margin-top:0;text-align:center">'+ic('lock')+(forced?'غيّر كلمة المرور المؤقتة':'تعيين كلمة مرور جديدة')+'</h2>'+(forced?'<p class="sub" style="text-align:center">لازم تختار كلمة مرور خاصة فيك قبل ما تبدأ. 8 خانات أو أكثر.</p>':'')+'<form id="pf">'+inp('كلمة المرور الجديدة')+inp('تأكيد كلمة المرور')+'<div class="err" id="perr"></div><button class="btn big" type="submit">حفظ والمتابعة</button></form>'+(forced?'<p style="text-align:center;margin:12px 0 0"><a href="#" class="small" onclick="sessionStorage.clear();OF.sb.auth.signOut().then(()=>{location.hash=\'\';location.reload()});return false">خروج</a></p>':''));
+  $('#pf').onsubmit=async e=>{e.preventDefault();const f=e.target,er=$('#perr');er.textContent='';if(f.pw.value!==f.pw2.value){er.textContent='كلمتا المرور غير متطابقتين.';return}if(/^(\d)\1+$|^(0?123456789?|12345678|87654321|password)$/i.test(f.pw.value)){er.textContent='اختر كلمة مرور أقوى من هذي.';return}
+    const btn=f.querySelector('button');btn.disabled=true;const {error}=await OF.sb.auth.updateUser({password:f.pw.value});if(error){btn.disabled=false;er.textContent=/same|different/i.test(error.message)?'لازم تختار كلمة مرور مختلفة عن المؤقتة.':'تعذّر الحفظ: '+error.message;return}
+    if(forced){try{await OF.sb.rpc('of_pw_changed')}catch(x){}}OF.recovery=false;location.hash=forced?'login':'';location.reload()};
 }
 function renderPublicCard(code){location.hash='staff';setTimeout(()=>staffSearch(code,'code'),300)}
 
