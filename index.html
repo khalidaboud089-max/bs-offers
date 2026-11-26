@@ -748,7 +748,7 @@ function shell(active,inner){
   const who=brChip+(!isOwner&&staffMe?'<div class="small" style="opacity:.85">'+ic('user')+''+esc(staffMe.name||'')+' · '+(ROLES[staffMe.role]||'')+'</div>':'');
   const sw=who+(isPanelUser()&&(isOwner||staffMe)&&can('deliver.view')?'<div class="switch"><a href="#admin" class="'+(active==='admin'?'on':'')+'">لوحة التحكم</a><a href="#staff" class="'+(active==='staff'?'on':'')+'">واجهة الموظف</a></div>':'');
   const out=OF.session?'<a href="#" id="logoutBtn" class="small" style="color:#fff;opacity:.8;text-decoration:none;margin-inline-start:8px" onclick="sessionStorage.clear();OF.sb.auth.signOut().then(()=>{location.hash=\'\';location.reload()});return false">خروج</a>':'';
-  return '<header class="top"><div class="wrap"><a href="#" class="brand" style="color:#fff;text-decoration:none"><div class="logo">'+LOGO(40)+'</div><div>بصمة الاهتمام للاتصالات<small>نظام عروض الجهات</small></div></a><div class="spacer"></div>'+sw+out+'</div></header><div class="demo">رسائل واتساب تُرسل حالياً بزر جاهز – الإرسال التلقائي من 0577894369 عبر منصة هاتف قريباً.</div><div class="wrap">'+inner+'</div>';
+  return '<header class="top"><div class="wrap"><a href="#" class="brand" style="color:#fff;text-decoration:none"><div class="logo">'+LOGO(40)+'</div><div>بصمة الاهتمام للاتصالات<small>نظام عروض الجهات</small></div></a><div class="spacer"></div>'+sw+out+'</div></header><div class="wrap">'+inner+'</div>';
 }
 
 // ---------- subscriptions (admin) ----------
@@ -1231,7 +1231,7 @@ async function renderJoin(){
 }
 
 // ---------- STAFF ----------
-let staffCurrent=null,staffUnsub=null,staffList=null,lastStaff=null,sMode=lsGet('bs_smode')||'code',sel=new Set();
+let staffCurrent=null,staffUnsub=null,staffList=null,lastStaff=null,sMode=lsGet('bs_smode')||'qr',sel=new Set();
 const recentKey='bs_recent';
 function recentGet(){try{return JSON.parse(lsGet(recentKey)||'[]')}catch(e){return []}}
 function recentAdd(c){const r=recentGet().filter(x=>x.id!==c.id);r.unshift({id:c.id,name:c.name,org:c.orgLabel||''});lsSet(recentKey,JSON.stringify(r.slice(0,6)))}
@@ -1353,9 +1353,9 @@ function drawStaffCard(c,a,o){
   $('#nf',res).onsubmit=async e=>{e.preventDefault();const t=$('#nt',res).value.trim();if(!t)return;try{const snap=await db.doc('customers/'+c.id).get();const cur=snap.data()||{};const notes=(cur.notes||[]).concat([{at:nowISO(),by:me||'',text:t,branch:$('#br')?$('#br').value:''}]).slice(-50);await db.doc('customers/'+c.id).update({notes});toast('تم حفظ الملاحظة')}catch(err){toast('ما انحفظت الملاحظة')}};
   $('#newS',res).onclick=()=>{if(staffUnsub){staffUnsub();staffUnsub=null}staffCurrent=null;lastStaff=null;sel=new Set();res.innerHTML='';drawRecent();drawMode();window.scrollTo({top:0,behavior:'smooth'})};
 }
-function giveBox(c,gs,br){return new Promise(res=>{modal('<h2>تأكيد التسليم</h2><p class="muted">للعميل <b>'+esc(c.name)+'</b> من <b>'+esc(br)+'</b>:</p>'+gs.map(g=>'<div class="gift" style="padding:8px 12px"><span class="nm">'+ic('gift')+''+esc(g.name)+'</span></div>').join('')+'<label class="f" style="margin-top:10px"><span><b>'+ic('key')+'رمز التسليم</b> – اطلبه من العميل (آخر 4 أرقام بعد الشرطة في رسالة الواتساب)</span><input type="text" id="gPin" inputmode="numeric" maxlength="5" autocomplete="off" placeholder="• • • •" class="bigin" style="font-size:28px !important;letter-spacing:10px"></label><div class="err" id="gErr"></div><p class="small muted">بعد التأكيد تنشال من رصيده.</p><label class="f"><span>اشترى شي إضافي؟ المبلغ بالريال (اختياري)</span><input type="text" id="gAmt" inputmode="decimal" placeholder="0" class="bigin"></label><label class="f"><span>ملاحظة (اختياري)</span><input type="text" id="gNote" placeholder="مثال: اشترى شاحن + كفر"></label><div class="row"><button class="btn ok big" data-ok>تأكيد التسليم</button></div>',(m,close)=>{let done=false;setTimeout(()=>{const p=$('#gPin',m);p&&p.focus()},60);const okb=m.querySelector('[data-ok]');
+function giveBox(c,gs,br){return new Promise(res=>{modal('<h2>تأكيد التسليم</h2><p class="muted">للعميل <b>'+esc(c.name)+'</b> من <b>'+esc(br)+'</b>:</p>'+gs.map(g=>'<div class="gift" style="padding:8px 12px"><span class="nm">'+ic('gift')+''+esc(g.name)+'</span></div>').join('')+'<label class="f" style="margin-top:10px"><span><b>'+ic('key')+'رمز التسليم</b> – اطلبه من العميل (آخر 4 أرقام بعد الشرطة في رسالة الواتساب)</span><input type="text" id="gPin" inputmode="numeric" maxlength="5" autocomplete="off" placeholder="• • • •" class="bigin" style="font-size:28px !important;letter-spacing:10px"></label><div class="err" id="gErr"></div><p class="small muted">بعد التأكيد تنشال من رصيده.</p><label class="f"><span>ملاحظة (اختياري)</span><input type="text" id="gNote" placeholder="مثال: العميل طلب تواصل لاحقاً"></label><div class="row"><button class="btn ok big" data-ok>تأكيد التسليم</button></div>',(m,close)=>{let done=false;setTimeout(()=>{const p=$('#gPin',m);p&&p.focus()},60);const okb=m.querySelector('[data-ok]');
     okb.onclick=async()=>{const pin=toLatin($('#gPin',m).value).replace(/\D/g,'');const er=$('#gErr',m);er.textContent='';if(pin.length<4){er.textContent='اكتب رمز التسليم';return}okb.disabled=true;okb.textContent='جاري التحقق…';
-      const amt=parseFloat(toLatin($('#gAmt',m).value).replace(/[^\d.]/g,''))||0;const note=$('#gNote',m).value.trim();
+      const amt=0;const note=$('#gNote',m).value.trim();
       let r;try{r=await OF.sb.rpc('of_deliver',{p_code:c.id,p_pin:pin,p_gifts:gs.map(g=>g.id),p_branch:br,p_amount:amt,p_note:note})}catch(e){r={error:e}}
       if(r.error){er.textContent='تعذّر الاتصال، حاول مرة ثانية';okb.disabled=false;okb.textContent='تأكيد التسليم';return}
       const d=r.data||{};if(d.ok){done=true;close();res(true);return}
