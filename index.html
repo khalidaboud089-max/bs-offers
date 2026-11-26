@@ -1254,7 +1254,7 @@ async function renderStaff(){
 }
 function drawMode(){
   const el=$('#smode');if(!el)return;
-  if(sMode==='qr'){el.innerHTML='<button class="btn big ok" id="scan" style="padding:22px">'+ic('camera',20)+'افتح الكاميرا وصوّر QR العميل</button><p class="small muted" style="text-align:center;margin:8px 0 0">على الجوال أو التابلت يفتح الكاميرا مباشرة. لو عندك قارئ باركود موصول، اختر «رقم العميل» وامسح عليه.</p>';$('#scan').onclick=()=>{const fi=$('#qrfile');fi.value='';fi.click()};return}
+  if(sMode==='qr'){el.innerHTML='<button class="btn big ok" id="scan" style="padding:22px">'+ic('camera',20)+'افتح قارئ QR</button><p class="small muted" style="text-align:center;margin:8px 0 0">وجّه الكاميرا على QR العميل (من الواتساب أو من جواله) ويقرأه تلقائياً. <a href="#" id="scanPhoto">أو صوّر صورة</a></p>';$('#scan').onclick=()=>liveScan();$('#scanPhoto').onclick=e=>{e.preventDefault();const fi=$('#qrfile');fi.value='';fi.click()};return}
   const isP=sMode==='phone';
   el.innerHTML='<form id="sform" class="row"><input type="text" id="sq" class="bigin" '+(isP?'inputmode="tel" placeholder="05xxxxxxxx"':'placeholder="رمز العميل – 6 خانات" style="text-transform:uppercase"')+' autocomplete="off" style="flex:1"><button class="btn" type="submit" style="padding:14px 20px">استعلام</button></form>';
   const q=$('#sq');setTimeout(()=>q.focus(),50);
@@ -1265,6 +1265,27 @@ function drawRecent(){const el=$('#recent');if(!el)return;const r=recentGet();el
 function todayKey(){return 'bs_today_'+new Date().toISOString().slice(0,10)}
 function drawToday(){const n=+(lsGet(todayKey())||0);const el=$('#today');if(el)el.textContent=n?'سلّمت اليوم من هذا الجهاز: '+n+' هدية':''}
 function bumpToday(k){lsSet(todayKey(),String(+(lsGet(todayKey())||0)+(k||1)));drawToday()}
+let scanStop=null;
+async function liveScan(){
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){const fi=$('#qrfile');fi.value='';fi.click();return}
+  const ov=document.createElement('div');ov.id='scanOv';ov.style.cssText='position:fixed;inset:0;z-index:9999;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center';
+  ov.innerHTML='<video id="scanV" playsinline muted style="width:100%;height:100%;object-fit:cover"></video><div style="position:absolute;width:min(70vw,320px);aspect-ratio:1;border:4px solid #c9a25a;border-radius:22px;box-shadow:0 0 0 9999px rgba(0,0,0,.45)"></div><div id="scanMsg" style="position:absolute;top:22px;left:0;right:0;text-align:center;color:#fff;font-weight:700;font-size:17px">وجّه الكاميرا على QR العميل</div><button id="scanX" class="btn" style="position:absolute;bottom:28px;background:#fff;color:#6e162c;padding:14px 34px;font-weight:700">إغلاق</button>';
+  document.body.appendChild(ov);
+  let stream=null,done=false,raf=0;
+  const close=()=>{done=true;cancelAnimationFrame(raf);if(stream)stream.getTracks().forEach(t=>t.stop());ov.remove();scanStop=null};
+  scanStop=close;$('#scanX').onclick=close;
+  try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}},audio:false})}
+  catch(e){close();toast('ما قدرت أفتح الكاميرا – اسمح للمتصفح باستخدامها أو استخدم «أو صوّر صورة»');return}
+  const v=$('#scanV');v.srcObject=stream;try{await v.play()}catch(e){}
+  let det=null;try{if('BarcodeDetector' in window){const f=await BarcodeDetector.getSupportedFormats();if(f.includes('qr_code'))det=new BarcodeDetector({formats:['qr_code']})}}catch(e){}
+  const cv=document.createElement('canvas'),cx=cv.getContext('2d',{willReadFrequently:true});let busy=false,last=0;
+  const hit=txt=>{if(done)return;try{navigator.vibrate&&navigator.vibrate(80)}catch(e){}close();staffSearch(txt)};
+  const tick=async ts=>{if(done)return;raf=requestAnimationFrame(tick);if(busy||ts-last<120||v.readyState<2)return;busy=true;last=ts;
+    try{if(det){const r=await det.detect(v);if(r&&r[0]&&r[0].rawValue){hit(r[0].rawValue.trim());return}}
+      else if(typeof jsQR!=='undefined'){const W=v.videoWidth,H=v.videoHeight,S=Math.min(W,H),sc=Math.min(1,640/S);cv.width=Math.round(S*sc);cv.height=cv.width;cx.drawImage(v,(W-S)/2,(H-S)/2,S,S,0,0,cv.width,cv.height);const d=cx.getImageData(0,0,cv.width,cv.height);const r=jsQR(d.data,cv.width,cv.height,{inversionAttempts:'dontInvert'});if(r&&r.data){hit(r.data.trim());return}}
+    }catch(e){}busy=false};
+  raf=requestAnimationFrame(tick);
+}
 async function decodeQR(file){
   if(typeof jsQR==='undefined')return null;
   try{const url=URL.createObjectURL(file);const img=await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=url});
