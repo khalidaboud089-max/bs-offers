@@ -1453,7 +1453,7 @@ function regDone(c,ag,existed){
   S.agreements=[ag].concat(S.agreements.filter(x=>x.id!==ag.id));
   const card=$('.reg .card');card.classList.add('done');
   const first=String(c.name||'').trim().split(/\s+/)[0]||'';
-  const cardUrl=(OF.url||'https://abhciubprkkextodwmxw.supabase.co')+'/functions/v1/gift-card?c='+encodeURIComponent(c.id);
+  const cardUrl=(OF.url||'https://abhciubprkkextodwmxw.supabase.co')+'/functions/v1/gift-card?s=2&c='+encodeURIComponent(c.id);
   const k=+c.giftsAllowed||+ag.giftsAllowed||1,gs=c.gifts||[];
   const gTitle=gs.length>1?(k>=gs.length?'هداياك':'تختار '+(k===1?'هدية وحدة':k+' هدايا')+' من:'):'هديتك';
   const end=custEnd(c,ag);
