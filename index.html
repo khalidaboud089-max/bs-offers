@@ -403,6 +403,55 @@ a.lp-float{text-decoration:none;z-index:3;cursor:pointer}
 @media (max-width:560px){.lp-steps,.lp-perk-grid{grid-template-columns:1fr}.lp-step{padding:18px}.asiri-band{height:22px;background-size:88px 22px}}
 @media (prefers-reduced-motion:reduce){.lp *{animation:none!important;transition:none!important}.rv{opacity:1;transform:none}}
 
+/* ===== TECH THEME (brand teal) ===== */
+.lp{--n1:#04121a;--n2:#082636;--n3:#1d6a88;--t1:#4d86a3;--t2:#3ec6e8;--ink:#0b1b26;--mut:#58697a}
+.asiri-band{display:none!important}
+.lp-hero{background:radial-gradient(900px 520px at 85% -10%,rgba(62,198,232,.28) 0%,transparent 60%),radial-gradient(700px 500px at 0% 100%,rgba(77,134,163,.35) 0%,transparent 60%),linear-gradient(160deg,#04121a 0%,#082636 55%,#0b3346 100%)!important}
+.lp-grid-bg{background-image:linear-gradient(rgba(62,198,232,.09) 1px,transparent 1px),linear-gradient(90deg,rgba(62,198,232,.09) 1px,transparent 1px)!important;background-size:46px 46px!important;mask-image:radial-gradient(ellipse at 50% 35%,#000 20%,transparent 78%)}
+.lp-hero::after{content:'';position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,transparent 0%,rgba(62,198,232,.10) 50%,transparent 100%);height:120px;animation:lpScan 6s linear infinite;opacity:.7}
+@keyframes lpScan{0%{transform:translateY(-120px)}100%{transform:translateY(100vh)}}
+.lp-glow.g1{background:#3ec6e8!important;opacity:.32!important}.lp-glow.g2{background:#4d86a3!important;opacity:.4!important}.lp-glow.g3{background:#3ec6e8!important}
+.lp-btn-main{background:linear-gradient(135deg,#3ec6e8,#4d86a3)!important;color:#03121a!important;box-shadow:0 10px 30px rgba(62,198,232,.35),inset 0 0 0 1px rgba(255,255,255,.25)!important}
+.lp-btn-main:hover{box-shadow:0 14px 40px rgba(62,198,232,.5)!important}
+.lp-btn-glass{border:1px solid rgba(62,198,232,.35)!important;background:rgba(62,198,232,.08)!important}
+.lp-nav.on{background:rgba(4,18,26,.82)!important;border-bottom:1px solid rgba(62,198,232,.15)}
+.lp-hero h1{background:linear-gradient(90deg,#fff 0%,#9fe7f7 60%,#3ec6e8 100%)!important;-webkit-background-clip:text!important;background-clip:text!important}
+.lp-chip{border:1px solid rgba(62,198,232,.35)!important;background:rgba(62,198,232,.08)!important;font-family:ui-monospace,SFMono-Regular,Menlo,monospace,inherit}
+.lp-chip i{background:#3ec6e8!important;box-shadow:0 0 0 4px rgba(62,198,232,.25),0 0 14px #3ec6e8!important}
+.lp-alt{background:linear-gradient(180deg,#f3f8fa,#eaf2f6)!important}
+.lp-kicker{color:#1d6a88!important;background:rgba(62,198,232,.10)!important;border:1px solid rgba(62,198,232,.25);padding-inline:14px!important;letter-spacing:.3px}
+.lp-kicker::before,.lp-kicker::after{display:none!important}
+.lp-kicker.light{color:#9fe7f7!important;background:rgba(62,198,232,.12)!important}
+.lp-card-img{border:1px solid rgba(62,198,232,.5)!important;border-radius:26px!important;box-shadow:0 20px 50px rgba(0,0,0,.35),0 0 0 6px rgba(62,198,232,.06),0 0 40px rgba(62,198,232,.18)!important}
+.lp-float{border:1px solid rgba(62,198,232,.3)!important;background:rgba(8,38,54,.6)!important;backdrop-filter:blur(12px)}
+.lp-svc-card::before,.lp-hot-c::before{background:linear-gradient(90deg,#3ec6e8,#4d86a3)!important;height:3px!important}
+.lp-svc-card,.lp-hot-c,.lp-why-c,.lp-step,.lp-perk{border:1px solid #dde9ef!important;transition:transform .3s,box-shadow .3s,border-color .3s}
+.lp-svc-card:hover,.lp-hot-c:hover,.lp-step:hover,.lp-perk:hover{border-color:#3ec6e8!important;box-shadow:0 18px 40px rgba(29,106,136,.16)!important;transform:translateY(-4px)}
+.lp-hot-tag,.lp-hot-fix{background:linear-gradient(135deg,#3ec6e8,#1d6a88)!important}
+.lp-link{color:#1d6a88!important}
+.lp-cta-in{background:linear-gradient(120deg,#082636,#1d6a88)!important;box-shadow:0 30px 60px rgba(8,38,54,.3)!important;border:1px solid rgba(62,198,232,.3)}
+.lp-br-c{background:linear-gradient(160deg,#04121a,#0b3346)!important;border:1px solid rgba(62,198,232,.25)}
+.lp-orgs-ic,.lp-svc-ic,.lp-hot-img.ic{background:linear-gradient(135deg,#1d6a88,#3ec6e8)!important;color:#fff!important}
+.lp-why-ic{background:linear-gradient(135deg,rgba(62,198,232,.16),rgba(77,134,163,.14))!important;color:#1d6a88!important}
+.lp-scale i{background:linear-gradient(90deg,#3ec6e8,#1d6a88)!important}
+.lp-stats b{color:#1d6a88!important}
+.lp-perks{background:#f8fbfc!important}
+.lp-step{box-shadow:0 10px 30px rgba(8,38,54,.06)!important}
+.lp-step-n{background:linear-gradient(135deg,#3ec6e8,#1d6a88)!important;clip-path:none!important;border-radius:16px!important;box-shadow:0 8px 20px rgba(62,198,232,.35)}
+.lp-perk{background:linear-gradient(160deg,#fff,#f1f8fb)!important}
+.lp-foot{background:#04121a!important;border-top:1px solid rgba(62,198,232,.15)}
+.lp-brands{border-top:1px solid rgba(62,198,232,.12)}
+@media (prefers-reduced-motion:reduce){.lp-hero::after{display:none}}
+body:has(.wrap.reg){background:radial-gradient(800px 420px at 90% -10%,rgba(62,198,232,.25),transparent 60%),radial-gradient(700px 420px at 0% 110%,rgba(77,134,163,.3),transparent 60%),linear-gradient(160deg,#04121a,#082636 60%,#0b3346)!important;background-attachment:fixed!important;min-height:100vh}
+body:has(.wrap.reg)::before{content:'';position:fixed;inset:0;pointer-events:none;background-image:linear-gradient(rgba(62,198,232,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(62,198,232,.07) 1px,transparent 1px);background-size:46px 46px;mask-image:radial-gradient(ellipse at 50% 30%,#000 20%,transparent 75%);z-index:0}
+.wrap.reg{position:relative;z-index:1}
+.wrap.reg .reghead .bsl{filter:brightness(1.85) saturate(1.35) drop-shadow(0 2px 10px rgba(0,0,0,.25))}
+.wrap.reg .reghead .sub,.wrap.reg .reghead .sub b{color:#cfe9f2!important}
+.wrap.reg>p a{color:#9fe7f7!important}
+.wrap.reg>.card{border:1px solid rgba(62,198,232,.25);box-shadow:0 30px 70px rgba(0,0,0,.35),0 0 50px rgba(62,198,232,.12)}
+.wrap.reg #rbtn{background:linear-gradient(135deg,#3ec6e8,#1d6a88);color:#fff;border:none;box-shadow:0 10px 26px rgba(62,198,232,.35)}
+.wrap.reg input:focus{border-color:#3ec6e8!important;box-shadow:0 0 0 3px rgba(62,198,232,.18)!important}
+.rd-hero{background:linear-gradient(135deg,#082636,#1d6a88 70%,#3ec6e8)!important}
 .bsl{display:inline-block;height:var(--h);background:url(https://cdn.salla.sa/QAapr/dplfh3v7Hlh3zInBcOT755vRIzi7jxIc6teFhmW0.png) no-repeat;background-size:calc(var(--h)*2.788) auto;vertical-align:middle;flex:none}
 .bsl-f{width:calc(var(--h)*2.465);background-position:calc(var(--h)*-0.1756) calc(var(--h)*-0.7143)}
 .bsl-i{width:calc(var(--h)*0.9105);background-position:calc(var(--h)*-1.7298) calc(var(--h)*-0.7143)}
@@ -597,8 +646,8 @@ const LP_HOT=[
  {t:'صيانة الجوالات في الفرع',d:'شاشات، بطاريات، منافذ شحن',tag:'صيانة',ic:'tools',img:IMG.ip17,url:WA_MSG('السلام عليكم، أبغى صيانة جوال')}
 ];
 const LP_DEFAULT={
-  audience:'منسوبي أمانة منطقة عسير',
-  heroTitle:'عروض وهدايا حصرية لمنسوبي أمانة منطقة عسير',
+  audience:'فريق بصمة الاهتمام للاتصالات',
+  heroTitle:'هدايا ومزايا حصرية لفريق بصمة الاهتمام',
   heroSub:'سجّل برقم جوالك واستلم كود هديتك على الواتساب، واستلمها من أقرب فرع لنا في أبها. أحدث الجوالات والبلايستيشن والبي سي بالتقسيط، وصيانة احترافية لكل أجهزتك.',
   about:'متجر سعودي مختص وبكفاءة إدارية ومعرفة علمية مميزة. وكلاء وموزعون معتمدون لجميع الشركات العالمية والمحلية. هدفنا الأسمى رضا عملائنا وتوفير جميع احتياجاتهم بأعلى جودة وأفضل سعر.',
   achievements:['وكلاء وموزعون معتمدون للشركات العالمية والمحلية','فرعين في أبها: وسط البلد والحزام الدائري','متجر إلكتروني متكامل على blhtm.com','شراكات وعروض حصرية مع المدارس والجهات الحكومية والشركات','مركز صيانة احترافي داخل الفرع','تقسيط ميسّر عبر تابي وتمارا وتوصيل داخل أبها']
@@ -625,7 +674,7 @@ async function renderLanding(){
    '<div class="lp-badges"><span>'+lpI('card')+'تقسيط تابي وتمارا</span><span>'+lpI('truck')+'توصيل داخل أبها</span><span>'+lpI('shield')+'منتجات أصلية بالضمان</span></div></div>'+
    '<div class="lp-hero-art rv"><div class="lp-orbit"></div><div class="lp-card-img c1"><img src="'+IMG.b18max+'" alt="ايفون 18 برو ماكس عنابي"></div><div class="lp-card-img c2"><img src="'+IMG.b18pro+'" alt="ايفون 18 برو عنابي"></div><div class="lp-card-img c3"><img src="'+IMG.ps5b+'" alt="بلايستيشن 5"></div><a class="lp-float f1" target="_blank" rel="noopener" href="'+WA_MSG('السلام عليكم، أبغى أستفسر عن صيانة جهاز')+'">'+lpI('tools')+'<b>صيانة</b><small>تواصل واتساب</small></a><div class="lp-float f2">'+lpI('tag')+'<b>أفضل سعر</b><small>بجودة أصلية</small></div></div>'+
   '</div><div class="lp-brands"><div class="lp-marq"><span>Apple</span><span>Samsung</span><span>Honor</span><span>Xiaomi</span><span>OPPO</span><span>TECNO</span><span>Sony PlayStation</span><span>MASS</span><span>Apple</span><span>Samsung</span><span>Honor</span><span>Xiaomi</span><span>OPPO</span><span>TECNO</span><span>Sony PlayStation</span><span>MASS</span></div></div><div class="asiri-band"></div></section>'+
-  '<section class="lp-sec lp-perks" id="perks"><div class="lp-wrap"><div class="lp-head rv"><span class="lp-kicker">لـ'+esc(L.audience)+'</span><h2>كيف تستفيد من العرض؟</h2><p>ثلاث خطوات بسيطة، وكل منسوب له كود شخصي خاص فيه.</p></div>'+'<div class="lp-steps">'+[['1','سجّل بياناتك','اسمك ورقم جوالك من رابط التسجيل الخاص بمنسوبي الأمانة.'],['2','يوصلك الكود','كود شخصي وQR على الواتساب مع رمز التسليم.'],['3','استلم من الفرع','اعرض الكود في فرع وسط البلد أو الحزام الدائري واستلم هديتك.']].map((x,i)=>'<div class="lp-step rv" style="--d:'+(i*90)+'ms"><span class="lp-step-n">'+x[0]+'</span><h3>'+x[1]+'</h3><p>'+x[2]+'</p></div>').join('')+'</div>'+'<div class="lp-perk-grid">'+[['tag','هدايا وخصومات حصرية','عروض خاصة لمنسوبي الأمانة على الإكسسوارات والصيانة.'],['card','تقسيط بدون فوائد','أحدث الجوالات والأجهزة على دفعات عبر تابي وتمارا.'],['tools','أولوية في الصيانة','فحص وصيانة احترافية في الفرع أو صيانة متنقلة لبابك.'],['shield','أصلي وبالضمان','منتجات من وكلاء معتمدين وضمان الوكيل.']].map((x,i)=>'<div class="lp-perk rv" style="--d:'+(i*70)+'ms"><div class="lp-why-ic">'+lpI(x[0])+'</div><div><h3>'+x[1]+'</h3><p>'+x[2]+'</p></div></div>').join('')+'</div></div></section>'+
+  '<section class="lp-sec lp-perks" id="perks"><div class="lp-wrap"><div class="lp-head rv"><span class="lp-kicker">لـ'+esc(L.audience)+'</span><h2>كيف تستفيد من العرض؟</h2><p>ثلاث خطوات بسيطة، ولكل موظف بطاقة هدية شخصية خاصة فيه.</p></div>'+'<div class="lp-steps">'+[['1','سجّل بياناتك','اسمك ورقم جوالك فقط، وتطلع لك هديتك مباشرة.'],['2','توصلك البطاقة','بطاقة هديتك بالـ QR ورمز التسليم على الواتساب.'],['3','استلم من الفرع','اعرض البطاقة في فرع وسط البلد أو الحزام الدائري واستلم هديتك.']].map((x,i)=>'<div class="lp-step rv" style="--d:'+(i*90)+'ms"><span class="lp-step-n">'+x[0]+'</span><h3>'+x[1]+'</h3><p>'+x[2]+'</p></div>').join('')+'</div>'+'<div class="lp-perk-grid">'+[['tag','هدايا وخصومات حصرية','مزايا خاصة لفريق بصمة الاهتمام على الإكسسوارات والصيانة.'],['card','تقسيط بدون فوائد','أحدث الجوالات والأجهزة على دفعات عبر تابي وتمارا.'],['tools','أولوية في الصيانة','فحص وصيانة احترافية في الفرع أو صيانة متنقلة لبابك.'],['shield','أصلي وبالضمان','منتجات من وكلاء معتمدين وضمان الوكيل.']].map((x,i)=>'<div class="lp-perk rv" style="--d:'+(i*70)+'ms"><div class="lp-why-ic">'+lpI(x[0])+'</div><div><h3>'+x[1]+'</h3><p>'+x[2]+'</p></div></div>').join('')+'</div></div></section>'+
   // ABOUT
   '<section class="lp-sec" id="about"><div class="lp-wrap lp-about"><div class="rv"><span class="lp-kicker">من نحن</span><h2>بصمة الاهتمام للاتصالات</h2><p class="lp-lead">'+esc(L.about)+'</p><div class="lp-about-pts"><div>'+lpI('medal')+'<b>خبرة ومعرفة</b><span>فريق متخصص يختار لك الأنسب لاحتياجك.</span></div><div>'+lpI('shield')+'<b>أصلي ومضمون</b><span>منتجات أصلية من وكلاء معتمدين.</span></div></div></div>'+
    '<div class="lp-about-art rv"><img src="'+IMG.b18max+'" alt="ايفون 18 برو ماكس"><div class="lp-stats">'+(stats.length?stats.map(s=>'<div><b data-count="'+(+s[0])+'">0</b><span>'+s[1]+'</span></div>').join(''):'<div><b>2</b><span>فروع في أبها</span></div>')+'</div></div></div></section>'+
